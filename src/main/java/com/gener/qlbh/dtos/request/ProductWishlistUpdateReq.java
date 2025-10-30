@@ -1,0 +1,14 @@
+package com.gener.qlbh.dtos.request;
+
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+public class ProductWishlistUpdateReq {
+    @NotNull
+    private boolean wishlist;
+}
