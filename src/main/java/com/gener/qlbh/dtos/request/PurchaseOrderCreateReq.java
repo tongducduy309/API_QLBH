@@ -8,9 +8,10 @@ import lombok.*;
 @Setter
 @Builder
 public class PurchaseOrderCreateReq {
-    private String productId;
+    private Long productId;
     private Double stockingQty;
     private Double totalLength;
     private Double costPerUnit;
     private String supplier;
+    private String note;
 }

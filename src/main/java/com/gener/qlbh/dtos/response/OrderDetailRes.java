@@ -14,9 +14,9 @@ public class OrderDetailRes {
     private Double quantity;
     private Double price;
     private Double totalLength;//
-    private Double lineTotal;//
+    private Double subtotal;//
     private String sku;
     private String name;
-    private String productId;
+    private Long productId;
     private String baseUnit;
 }

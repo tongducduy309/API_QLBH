@@ -18,6 +18,7 @@ public class ProductUpdateReq {
     private Double storePrice;
     private boolean status;
     private String baseUnit;
+    private Double weight;
     @NotNull
     private Long categoryId;
 }

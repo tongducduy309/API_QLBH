@@ -1,5 +1,6 @@
 package com.gener.qlbh.models;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -7,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
@@ -34,9 +36,11 @@ public class Customer {
 
     private String address;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company company;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    public void prePersist() { if (createdAt==null) this.createdAt = LocalDateTime.now(); }
 
 //    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
 //    private Set<Order> orders;

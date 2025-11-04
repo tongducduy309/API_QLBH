@@ -28,9 +28,5 @@ public class Category {
     @Column(nullable = false)
     private String defaultBaseUnit;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company company;
-
 
 }

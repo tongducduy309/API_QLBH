@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class PurchaseOrderService {
@@ -59,7 +61,7 @@ public class PurchaseOrderService {
         Double totalBaseUnitQty = qty*length;
 
         Inventory inventory = product.getInventory();
-        inventory.setTotalBaseUnitQty(inventory.getTotalBaseUnitQty()+totalBaseUnitQty);
+        inventory.importInventory(totalBaseUnitQty);
         product.setCostPrice(req.getCostPerUnit());
         purchaseOrder.setProduct(product);
         inventoryRepository.save(inventory);
@@ -72,5 +74,38 @@ public class PurchaseOrderService {
                         .build()
         );
 
+    }
+
+    @Transactional
+    public ResponseEntity<ResponseObject> deletePurchaseOrder(Long id){
+        Optional<PurchaseOrder> purchaseOrder = purchaseOrderRepository.findById(id);
+        if (purchaseOrder.isPresent()){
+            Product product = purchaseOrder.get().getProduct();
+            Double length = purchaseOrder.get().getTotalLength();
+            Double qty = purchaseOrder.get().getStockingQty();
+            if (product.getCategory().getMethod().equals(Method.SHEET_METAL) && qty==null){
+                qty=1d;
+            }
+            if (product.getCategory().getMethod().equals(Method.MISC)){
+                length=1.0;
+            }
+            Double totalBaseUnitQty = qty*length;
+
+            Inventory inventory = product.getInventory();
+            inventory.exportInventory(totalBaseUnitQty);
+            inventoryRepository.save(inventory);
+            purchaseOrderRepository.deleteById(id);
+            Optional<PurchaseOrder> topPurchaseOrder = purchaseOrderRepository.findTopByProductIdOrderByCreatedAtDesc(product.getId());
+            if (topPurchaseOrder.isPresent()){
+                product.setCostPrice(topPurchaseOrder.get().getCostPerUnit());
+            }
+            else{
+                product.setCostPrice(0d);
+            }
+
+        }
+        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
+                new ResponseObject(SuccessCode.REQUEST.getStatus(), "Delete Purchase Order Successfully","")
+        );
     }
 }

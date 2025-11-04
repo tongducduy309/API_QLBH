@@ -28,22 +28,22 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    ResponseEntity<ResponseObject> getProductById(@PathVariable String id) throws APIException{
+    ResponseEntity<ResponseObject> getProductById(@PathVariable Long id) throws APIException{
         return productService.getProductById(id);
     }
 
     @DeleteMapping("/{id}")
-    ResponseEntity<ResponseObject> deleteProduct(@PathVariable String id){
+    ResponseEntity<ResponseObject> deleteProduct(@PathVariable Long id){
         return productService.deleteProduct(id);
     }
 
     @PutMapping("/{id}")
-    ResponseEntity<ResponseObject> updateProduct(@PathVariable String id, @RequestBody ProductUpdateReq req) throws APIException {
+    ResponseEntity<ResponseObject> updateProduct(@PathVariable Long id, @RequestBody ProductUpdateReq req) throws APIException {
         return productService.updateProduct(id,req);
     }
 
     @PutMapping("wishlist/{id}")
-    ResponseEntity<ResponseObject> updateWishlistProduct(@PathVariable String id, @RequestBody ProductWishlistUpdateReq req) throws APIException {
+    ResponseEntity<ResponseObject> updateWishlistProduct(@PathVariable Long id, @RequestBody ProductWishlistUpdateReq req) throws APIException {
         return productService.updateWishlish(id,req);
     }
 }

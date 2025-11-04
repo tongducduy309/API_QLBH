@@ -1,16 +1,14 @@
 package com.gener.qlbh.services;
 
 import com.gener.qlbh.dtos.request.OrderReq;
+import com.gener.qlbh.dtos.request.OrderUpdateReq;
 import com.gener.qlbh.dtos.request.PaidDeptReq;
 import com.gener.qlbh.enums.ErrorCode;
 import com.gener.qlbh.enums.SuccessCode;
 import com.gener.qlbh.exception.APIException;
 import com.gener.qlbh.mapper.OrderMapper;
 import com.gener.qlbh.models.*;
-import com.gener.qlbh.repositories.CustomerRepository;
-import com.gener.qlbh.repositories.InventoryRepository;
-import com.gener.qlbh.repositories.OrderRepository;
-import com.gener.qlbh.repositories.ProductRepository;
+import com.gener.qlbh.repositories.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +30,7 @@ public class OrderService {
     private final OrderMapper orderMapper;
     private final OrderNumberService orderNumberService;
     private final InventoryRepository inventoryRepository;
+    private final OrderDetailRepository orderDetailRepository;
 
     public ResponseEntity<ResponseObject> getAllOrders(){
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
@@ -72,23 +71,13 @@ public class OrderService {
                     .build());
         }
 
-//        for (var product:req.getOrderDetailReqs()){
-//            if (product.getProductId()!=null){
-//                productRepository.findById(product.getProductId()).orElseThrow(()-> APIException.builder()
-//                        .status(ErrorCode.NOT_FOUND.getStatus())
-//                        .message("Cannot Found Product With Id = "+product.getProductId())
-//                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-//                        .build());
-//            }
-//        }
-
         Order order = orderMapper.toOrder(req);
         Set<OrderDetail> details = new HashSet<>();
         Double subtotal = 0d;
 
         for (var orderDetailReq:req.getOrderDetailReqs()){
             Product product =null;
-            if(orderDetailReq.getProductId()!=null&&!orderDetailReq.getProductId().isEmpty()&&!orderDetailReq.getProductId().isBlank()){
+            if(orderDetailReq.getProductId()!=null){
                 product = productRepository.findById(orderDetailReq.getProductId()).orElseThrow(()-> APIException.builder()
                         .status(ErrorCode.NOT_FOUND.getStatus())
                         .message("Cannot Found Product With Id = "+orderDetailReq.getProductId())
@@ -105,7 +94,7 @@ public class OrderService {
             orderDetail.setPrice(orderDetailReq.getPrice());
             if (product!=null){
                 Inventory inventory = product.getInventory();
-                inventory.setTotalBaseUnitQty(inventory.getTotalBaseUnitQty()-orderDetail.getTotalQuantity());
+                inventory.exportInventory(orderDetail.getTotalQuantity());
                 inventoryRepository.save(inventory);
             }
             details.add(orderDetail);
@@ -139,13 +128,119 @@ public class OrderService {
     }
 
     @Transactional
+    public ResponseEntity<ResponseObject> updateOrder(String id, OrderUpdateReq req) throws APIException {
+        Order order = orderRepository.findById(id).orElseThrow(()-> APIException.builder()
+                .status(ErrorCode.NOT_FOUND.getStatus())
+                .message("Cannot Found Order With Id = "+id)
+                .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
+                .build());
+
+        Customer customer = null;
+        if (req.getCustomerId()!=null){
+            customer = customerRepository.findById(req.getCustomerId()).orElseThrow(()-> APIException.builder()
+                    .status(ErrorCode.NOT_FOUND.getStatus())
+                    .message("Cannot Found Customer With Id = "+req.getCustomerId())
+                    .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
+                    .build());
+        }
+
+        Set<OrderDetail> persistentDetails = order.getDetails();
+        if (persistentDetails == null) {
+            persistentDetails = new HashSet<>();
+            order.setDetails(persistentDetails);
+        }
+
+        Set<OrderDetail> details = new HashSet<>();
+        Double subtotal = 0d;
+        Set<Long> ids = new HashSet<>();
+
+
+        for (var orderDetailReq:req.getOrderDetailReqs()){
+
+            Product product =null;
+            if(orderDetailReq.getProductId()!=null){
+                product = productRepository.findById(orderDetailReq.getProductId()).orElseThrow(()-> APIException.builder()
+                        .status(ErrorCode.NOT_FOUND.getStatus())
+                        .message("Cannot Found Product With Id = "+orderDetailReq.getProductId())
+                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
+                        .build());
+            }
+
+            OrderDetail orderDetail = null;
+
+            if (orderDetailReq.getId()!=null){
+                orderDetail = orderDetailRepository.findById(orderDetailReq.getId()).orElseThrow(()-> APIException.builder()
+                        .status(ErrorCode.NOT_FOUND.getStatus())
+                        .message("Cannot Found Order Detail With Id = "+orderDetailReq.getId())
+                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
+                        .build());
+
+            }
+            else{
+                orderDetail = orderMapper.toOrderDetail(orderDetailReq);
+                orderDetail.setOrder(order);
+                orderDetail.setProduct(product);
+                orderDetail.setBaseUnit(product==null?orderDetailReq.getBaseUnit():product.getBaseUnit());
+                orderDetail.setPrice(orderDetailReq.getPrice());
+
+                if (product!=null){
+                    Inventory inventory = product.getInventory();
+                    inventory.exportInventory(orderDetail.getTotalQuantity());
+
+                    inventoryRepository.save(inventory);
+                }
+
+            }
+            details.add(orderDetail);
+            persistentDetails.add(orderDetail);
+            ids.add(orderDetail.getId());
+            subtotal+=orderDetail.getSubtotal();
+
+
+
+        }
+
+        Iterator<OrderDetail> it = persistentDetails.iterator();
+        while (it.hasNext()) {
+            OrderDetail existingDetail = it.next();
+            if (existingDetail.getId() != null && !ids.contains(existingDetail.getId())) {
+                if (existingDetail.getProduct() != null) {
+                    Inventory inventory = existingDetail.getProduct().getInventory();
+                    inventory.importInventory(existingDetail.getTotalQuantity());
+                    inventoryRepository.save(inventory);
+                }
+                it.remove();
+            }
+        }
+
+        order.setSubtotal(subtotal);
+        order.setAmount();
+        order.setCustomer(customer);
+        order.setCreatedAt(req.getCreatedAt()==null? LocalDateTime.now():LocalDateTime.ofInstant(Instant.parse(req.getCreatedAt()), ZoneId.systemDefault()));
+
+
+
+
+
+
+        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
+                ResponseObject.builder()
+                        .status(SuccessCode.REQUEST.getStatus())
+                        .message("Update Order Successfully")
+                        .data(orderMapper.toOrderRes(orderRepository.save(order)))
+                        .build()
+        );
+
+    }
+
+    @Transactional
     public ResponseEntity<ResponseObject> deleteOrder(String id){
         Optional<Order> order = orderRepository.findById(id);
         if (order.isPresent()){
             for (var orderDetail:order.get().getDetails()){
                 if (orderDetail.getProduct()!=null){
                     Inventory inventory = orderDetail.getProduct().getInventory();
-                    inventory.setTotalBaseUnitQty(inventory.getTotalBaseUnitQty()+orderDetail.getTotalQuantity());
+                    inventory.importInventory(orderDetail.getTotalQuantity());
                     inventoryRepository.save(inventory);
                 }
             }

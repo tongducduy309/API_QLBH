@@ -3,6 +3,7 @@ package com.gener.qlbh.mapper;
 
 
 import com.gener.qlbh.dtos.request.OrderDetailReq;
+import com.gener.qlbh.dtos.request.OrderDetailUpdateReq;
 import com.gener.qlbh.dtos.request.OrderReq;
 import com.gener.qlbh.dtos.response.OrderDetailRes;
 import com.gener.qlbh.dtos.response.OrderRes;
@@ -44,7 +45,18 @@ public interface OrderMapper {
     @Mapping(target = "name",source = "name")
     OrderDetail toOrderDetail(OrderDetailReq req);
 
-    Set<OrderDetail> toEntityDetails(List<OrderDetailReq> reqs);
+    @Mapping(target = "id",      source = "id")
+    @Mapping(target = "order",   ignore = true)
+    @Mapping(target = "product", ignore = true)
+    @Mapping(target = "length",  source = "length")
+    @Mapping(target = "quantity",source = "quantity")
+    @Mapping(target = "price",source = "price")
+    @Mapping(target = "name",source = "name")
+    OrderDetail toOrderDetail(OrderDetailUpdateReq req);
+
+    Set<OrderDetail> toEntityDetails_Create(List<OrderDetailReq> reqs);
+
+    Set<OrderDetail> toEntityDetails_Update(List<OrderDetailUpdateReq> reqs);
 
 
     OrderRes toOrderRes(Order order);
@@ -58,7 +70,7 @@ public interface OrderMapper {
     @Mapping(target = "name",        source = "name")
     @Mapping(target = "productId",   source = "product.id")
     @Mapping(target = "baseUnit",    source = "baseUnit")
-    @Mapping(target = "lineTotal",    source = "subtotal")
+    @Mapping(target = "subtotal",    source = "subtotal")
     @Mapping(target = "totalLength",    source = "totalLength")
     OrderDetailRes toOrderDetailRes(OrderDetail orderDetail);
 

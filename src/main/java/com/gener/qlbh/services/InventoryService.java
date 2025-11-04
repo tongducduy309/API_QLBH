@@ -42,7 +42,7 @@ public class InventoryService {
         List<String> list = new ArrayList<>();
         for (OrderDetailReq orderDetailReq:orderReq.getOrderDetailReqs()){
 
-            if(orderDetailReq.getProductId()!=null&&!orderDetailReq.getProductId().isEmpty()&&!orderDetailReq.getProductId().isBlank()){
+            if(orderDetailReq.getProductId()!=null){
                 Product product = productRepository.findById(orderDetailReq.getProductId()).orElseThrow(()-> APIException.builder()
                         .status(ErrorCode.NOT_FOUND.getStatus())
                         .message("Cannot Found Product With Id = "+orderDetailReq.getProductId())

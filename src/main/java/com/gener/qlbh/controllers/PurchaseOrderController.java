@@ -23,4 +23,9 @@ public class PurchaseOrderController {
     ResponseEntity<ResponseObject> getAllPurchaseOrder(){
         return purchaseOrderService.getAllPurchaseOrder();
     }
+
+    @DeleteMapping("/{id}")
+    ResponseEntity<ResponseObject> deletePurchaseOrder(@PathVariable Long id){
+        return purchaseOrderService.deletePurchaseOrder(id);
+    }
 }

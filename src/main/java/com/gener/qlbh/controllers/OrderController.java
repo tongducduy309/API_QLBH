@@ -25,6 +25,11 @@ public class OrderController {
         return orderService.createOrder(req);
     }
 
+    @PutMapping("/{id}")
+    ResponseEntity<ResponseObject> updateOrder(@PathVariable String id, @RequestBody OrderUpdateReq req) throws APIException {
+        return orderService.updateOrder(id, req);
+    }
+
     @GetMapping("/{id}")
     ResponseEntity<ResponseObject> getOrderById(@PathVariable String id) throws APIException {
         return orderService.getOrderById(id);

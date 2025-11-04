@@ -5,6 +5,6 @@ import com.gener.qlbh.models.Inventory;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 
-public interface InventoryRepository extends JpaRepository<Inventory,String> {
-    Inventory findByProductId(String id);
+public interface InventoryRepository extends JpaRepository<Inventory,Long> {
+    Inventory findByProductId(Long id);
 }

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.gener.qlbh.context.TenantContext;
 import com.gener.qlbh.enums.Method;
 import com.gener.qlbh.utils.StringUtil;
 import jakarta.persistence.*;
@@ -24,15 +23,15 @@ import java.util.Set;
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Product {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private String sku;
 
     @Column(nullable = false,length = 100,unique = true)
     private String name;
 
-
+    private Double weight;
 
     private Double retailPrice;
 
@@ -47,10 +46,6 @@ public class Product {
     private String baseUnit;
 
     private Double costPrice;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company company;
 
 
 
@@ -68,16 +63,6 @@ public class Product {
         this.inventory = inventory;
         if (inventory != null) {
             inventory.setProduct(this);
-        }
-    }
-
-    @PrePersist
-    public void _fillCompany() {
-        if (this.company == null) {
-            this.company = TenantContext.get(); // lấy từ context nếu có
-        }
-        if (this.company == null) {
-            throw new IllegalStateException("Product.company must not be null");
         }
     }
 

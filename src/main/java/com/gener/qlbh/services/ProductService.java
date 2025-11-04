@@ -1,6 +1,5 @@
 package com.gener.qlbh.services;
 
-import com.gener.qlbh.context.TenantContext;
 import com.gener.qlbh.dtos.request.ProductCreateReq;
 import com.gener.qlbh.dtos.request.ProductUpdateReq;
 import com.gener.qlbh.dtos.request.ProductWishlistUpdateReq;
@@ -8,7 +7,10 @@ import com.gener.qlbh.enums.ErrorCode;
 import com.gener.qlbh.enums.SuccessCode;
 import com.gener.qlbh.exception.APIException;
 import com.gener.qlbh.mapper.ProductMapper;
-import com.gener.qlbh.models.*;
+import com.gener.qlbh.models.Category;
+import com.gener.qlbh.models.Inventory;
+import com.gener.qlbh.models.Product;
+import com.gener.qlbh.models.ResponseObject;
 import com.gener.qlbh.repositories.CategoryRepository;
 import com.gener.qlbh.repositories.ProductRepository;
 import jakarta.transaction.Transactional;
@@ -42,7 +44,7 @@ public class ProductService {
     }
 
     @Transactional
-    public ResponseEntity<ResponseObject> getProductById(String id) throws APIException {
+    public ResponseEntity<ResponseObject> getProductById(Long id) throws APIException {
         Product product = productRepository.findById(id).orElseThrow(()-> APIException.builder()
                 .status(ErrorCode.NOT_FOUND.getStatus())
                 .message("Cannot Found Product With Id = "+id)
@@ -66,11 +68,6 @@ public class ProductService {
                 .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
                 .build());
 
-        Company curr = TenantContext.required();
-        if (!category.getCompany().getId().equals(curr.getId())) {
-            throw new IllegalStateException("Category không thuộc company hiện hành");
-        }
-
         Inventory inventory = Inventory.builder()
                 .totalBaseUnitQty(0.0)
                 .build();
@@ -79,7 +76,6 @@ public class ProductService {
 
         product.setCategory(category);
         product.setInventory(inventory);
-        product.setCompany(curr);
         return ResponseEntity.status(SuccessCode.CREATE.getHttpStatusCode()).body(
                 ResponseObject.builder()
                         .status(SuccessCode.CREATE.getStatus())
@@ -91,7 +87,7 @@ public class ProductService {
     }
 
     @Transactional
-    public ResponseEntity<ResponseObject> deleteProduct(String id){
+    public ResponseEntity<ResponseObject> deleteProduct(Long id){
         Optional<Product> product = productRepository.findById(id);
         if (product.isPresent()){
             productRepository.deleteById(id);
@@ -103,7 +99,7 @@ public class ProductService {
     }
 
     @Transactional
-    public ResponseEntity<ResponseObject> updateProduct(String id, ProductUpdateReq req) throws APIException {
+    public ResponseEntity<ResponseObject> updateProduct(Long id, ProductUpdateReq req) throws APIException {
         boolean existsProduct = productRepository.existsById(id);
         if (!existsProduct) {
             throw APIException.builder()
@@ -130,7 +126,7 @@ public class ProductService {
     }
 
     @Transactional
-    public ResponseEntity<ResponseObject> updateWishlish(String id, ProductWishlistUpdateReq req) throws APIException {
+    public ResponseEntity<ResponseObject> updateWishlish(Long id, ProductWishlistUpdateReq req) throws APIException {
         Product product = productRepository.findById(id).orElseThrow(()-> APIException.builder()
                 .status(ErrorCode.NOT_FOUND.getStatus())
                 .message("Cannot Found Product With Id = "+id)

@@ -2,7 +2,6 @@ package com.gener.qlbh.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.gener.qlbh.context.TenantContext;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,7 +21,7 @@ import java.math.BigDecimal;
 public class Inventory {
     @Id
 //    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
@@ -34,18 +33,13 @@ public class Inventory {
     @Column(nullable = false)
     private Double totalBaseUnitQty;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company company;
 
-    @PrePersist
-    public void _fillCompany() {
-        if (this.company == null) {
-            this.company = TenantContext.get(); // lấy từ context nếu có
-        }
-        if (this.company == null) {
-            throw new IllegalStateException("Product.company must not be null");
-        }
+    public void exportInventory(Double totalQuantity){
+        this.totalBaseUnitQty-=totalQuantity;
+    }
+
+    public void importInventory(Double totalQuantity){
+        this.totalBaseUnitQty+=totalQuantity;
     }
 
 

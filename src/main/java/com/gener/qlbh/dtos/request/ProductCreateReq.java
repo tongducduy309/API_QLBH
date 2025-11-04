@@ -20,6 +20,7 @@ public class ProductCreateReq {
     private String name;
     private Double retailPrice;
     private Double storePrice;
+    private String weight;
     @NotNull
     private boolean status;
     private String baseUnit;

@@ -2,7 +2,6 @@ package com.gener.qlbh.models;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.gener.qlbh.context.TenantContext;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,23 +36,11 @@ public class PurchaseOrder {
 
     private String supplier;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company company;
+    private String note;
 
 
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
-        _fillCompany();
-    }
-
-    public void _fillCompany() {
-        if (this.company == null) {
-            this.company = TenantContext.get(); // lấy từ context nếu có
-        }
-        if (this.company == null) {
-            throw new IllegalStateException("Product.company must not be null");
-        }
     }
 }
