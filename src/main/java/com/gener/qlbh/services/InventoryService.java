@@ -50,15 +50,15 @@ public class InventoryService {
                         .build());
                 OrderDetail orderDetail = orderMapper.toOrderDetail(orderDetailReq);
                 Double totalLength = orderDetail.getTotalLength();
-                Inventory inventory = product.getInventory();
-                if((totalLength!=null&&totalLength>inventory.getTotalBaseUnitQty())||(totalLength==null&&orderDetail.getQuantity()>inventory.getTotalBaseUnitQty())){
-//                    throw APIException.builder()
-//                            .status(ErrorCode.BAD_REQUEST.getStatus())
-//                            .message("Trong kho không có đủ số lượng sản phẩm có id = "+product.getId())
-//                            .httpStatusCode(ErrorCode.BAD_REQUEST.getHttpStatusCode())
-//                            .build();
-                    list.add(product.getName());
-                }
+//                Inventory inventory = product.getInventory();
+//                if((totalLength!=null&&totalLength>inventory.getTotalBaseUnitQty())||(totalLength==null&&orderDetail.getQuantity()>inventory.getTotalBaseUnitQty())){
+////                    throw APIException.builder()
+////                            .status(ErrorCode.BAD_REQUEST.getStatus())
+////                            .message("Trong kho không có đủ số lượng sản phẩm có id = "+product.getId())
+////                            .httpStatusCode(ErrorCode.BAD_REQUEST.getHttpStatusCode())
+////                            .build();
+//                    list.add(product.getName());
+//                }
             }
         }
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(

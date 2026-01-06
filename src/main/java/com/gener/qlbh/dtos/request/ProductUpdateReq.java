@@ -6,19 +6,18 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 public class ProductUpdateReq {
-    private String sku;
     @NotNull
     private String name;
-    private Double retailPrice;
-    private Double storePrice;
     private boolean status;
     private String baseUnit;
-    private Double weight;
     @NotNull
     private Long categoryId;
+    private List<ProductVariantUpdateReq> variants;
 }

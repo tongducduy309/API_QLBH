@@ -12,6 +12,9 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -26,16 +29,8 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String sku;
-
     @Column(nullable = false,length = 100,unique = true)
     private String name;
-
-    private Double weight;
-
-    private Double retailPrice;
-
-    private Double storePrice;
 
     @Builder.Default
     private boolean status=true;
@@ -45,26 +40,16 @@ public class Product {
 
     private String baseUnit;
 
-    private Double costPrice;
-
-
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductVariant> variants = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
 //    @JsonBackReference
     private Category category;
 
-    @OneToOne(mappedBy = "product", cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE }, orphanRemoval = true)
-    @ToString.Exclude
-//    @JsonManagedReference
-    private Inventory inventory;
 
-    public void setInventory(Inventory inventory) {
-        this.inventory = inventory;
-        if (inventory != null) {
-            inventory.setProduct(this);
-        }
-    }
+
 
 
 

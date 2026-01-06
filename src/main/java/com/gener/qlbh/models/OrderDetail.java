@@ -25,28 +25,28 @@ public class OrderDetail {
     private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id")
-    private Product product;
+    @JoinColumn(name = "product_variant_id")
+    private ProductVariant productVariant;
     private Double price;
     private Double length;
     private Double quantity;
     private String baseUnit;
 
     public Double getSubtotal(){
-        if (this.getProduct()==null) return this.price;
-        if (this.getProduct().getCategory().getMethod()==Method.SHEET_METAL){
+        if (this.getProductVariant()==null) return this.price;
+        if (this.getProductVariant().getProduct().getCategory().getMethod()==Method.SHEET_METAL){
             return this.length*this.quantity*this.price;
         }
         return this.quantity*this.price;
     }
 
     public Double getTotalLength(){
-        if (this.getProduct()==null||this.getProduct().getCategory().getMethod()==Method.MISC) return null;
+        if (this.getProductVariant()==null||this.getProductVariant().getProduct().getCategory().getMethod()==Method.MISC) return null;
         return this.length*this.quantity;
     }
 
     public Double getTotalQuantity(){
-        if (this.getProduct()==null||this.getProduct().getCategory().getMethod()==Method.MISC) return quantity;
+        if (this.getProductVariant()==null||this.getProductVariant().getProduct().getCategory().getMethod()==Method.MISC) return quantity;
         return this.length*this.quantity;
     }
 

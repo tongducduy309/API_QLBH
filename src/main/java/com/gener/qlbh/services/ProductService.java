@@ -2,34 +2,34 @@ package com.gener.qlbh.services;
 
 import com.gener.qlbh.dtos.request.ProductCreateReq;
 import com.gener.qlbh.dtos.request.ProductUpdateReq;
+import com.gener.qlbh.dtos.request.ProductVariantUpdateReq;
 import com.gener.qlbh.dtos.request.ProductWishlistUpdateReq;
 import com.gener.qlbh.enums.ErrorCode;
 import com.gener.qlbh.enums.SuccessCode;
 import com.gener.qlbh.exception.APIException;
 import com.gener.qlbh.mapper.ProductMapper;
-import com.gener.qlbh.models.Category;
-import com.gener.qlbh.models.Inventory;
-import com.gener.qlbh.models.Product;
-import com.gener.qlbh.models.ResponseObject;
+import com.gener.qlbh.models.*;
 import com.gener.qlbh.repositories.CategoryRepository;
+import com.gener.qlbh.repositories.OrderDetailRepository;
 import com.gener.qlbh.repositories.ProductRepository;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductMapper productMapper;
+    private final OrderDetailRepository orderDetailRepository;
 
     @Transactional
     public ResponseEntity<ResponseObject> getAllProducts(){
@@ -68,14 +68,22 @@ public class ProductService {
                 .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
                 .build());
 
-        Inventory inventory = Inventory.builder()
-                .totalBaseUnitQty(0.0)
-                .build();
+
+//        Inventory inventory = Inventory.builder()
+//                .totalBaseUnitQty(0.0)
+//                .build();
 
         Product product = productMapper.toProduct(req);
 
+        if (product.getVariants()!=null){
+            for (ProductVariant productVariant: product.getVariants()){
+                productVariant.setProduct(product);
+            }
+        }
+
+
         product.setCategory(category);
-        product.setInventory(inventory);
+//        product.setInventory(inventory);
         return ResponseEntity.status(SuccessCode.CREATE.getHttpStatusCode()).body(
                 ResponseObject.builder()
                         .status(SuccessCode.CREATE.getStatus())
@@ -117,7 +125,37 @@ public class ProductService {
 
         Product newProduct = productMapper.toProduct(req);
         newProduct.setId(id);
+
         newProduct.setCategory(category);
+        Set<Long> keepIds = new HashSet<>();
+
+        if (newProduct.getVariants()!=null){
+            for (ProductVariant productVariant: newProduct.getVariants()){
+                productVariant.setProduct(newProduct);
+                keepIds.add(productVariant.getId());
+            }
+        }
+
+        List<Long> deleteIds = req.getVariants().stream()
+                .map(ProductVariantUpdateReq::getId)
+                .filter(Objects::nonNull)
+                .filter(vid -> !keepIds.contains(vid))
+                .toList();
+
+        if (!deleteIds.isEmpty() && orderDetailRepository.existsByProductVariant_IdIn(deleteIds)) {
+            throw APIException.builder()
+                    .status(ErrorCode.BAD_REQUEST.getStatus())
+                    .message("Cannot delete product variants because they are used in order details: " + deleteIds)
+                    .httpStatusCode(ErrorCode.BAD_REQUEST.getHttpStatusCode())
+                    .build();
+        }
+
+        if (!deleteIds.isEmpty()) {
+            req.getVariants().removeIf(v -> v.getId() != null && deleteIds.contains(v.getId()));
+        }
+
+
+
 
 
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(

@@ -89,13 +89,13 @@ public class OrderService {
 
 
             orderDetail.setOrder(order);
-            orderDetail.setProduct(product);
+//            orderDetail.setProductVariant(product);
             orderDetail.setBaseUnit(product==null?orderDetailReq.getBaseUnit():product.getBaseUnit());
             orderDetail.setPrice(orderDetailReq.getPrice());
             if (product!=null){
-                Inventory inventory = product.getInventory();
-                inventory.exportInventory(orderDetail.getTotalQuantity());
-                inventoryRepository.save(inventory);
+//                Inventory inventory = product.getInventory();
+//                inventory.exportInventory(orderDetail.getTotalQuantity());
+//                inventoryRepository.save(inventory);
             }
             details.add(orderDetail);
             subtotal+=orderDetail.getSubtotal();
@@ -179,15 +179,15 @@ public class OrderService {
             else{
                 orderDetail = orderMapper.toOrderDetail(orderDetailReq);
                 orderDetail.setOrder(order);
-                orderDetail.setProduct(product);
+//                orderDetail.setProduct(product);
                 orderDetail.setBaseUnit(product==null?orderDetailReq.getBaseUnit():product.getBaseUnit());
                 orderDetail.setPrice(orderDetailReq.getPrice());
 
                 if (product!=null){
-                    Inventory inventory = product.getInventory();
-                    inventory.exportInventory(orderDetail.getTotalQuantity());
-
-                    inventoryRepository.save(inventory);
+//                    Inventory inventory = product.getInventory();
+//                    inventory.exportInventory(orderDetail.getTotalQuantity());
+//
+//                    inventoryRepository.save(inventory);
                 }
 
             }
@@ -204,11 +204,11 @@ public class OrderService {
         while (it.hasNext()) {
             OrderDetail existingDetail = it.next();
             if (existingDetail.getId() != null && !ids.contains(existingDetail.getId())) {
-                if (existingDetail.getProduct() != null) {
-                    Inventory inventory = existingDetail.getProduct().getInventory();
-                    inventory.importInventory(existingDetail.getTotalQuantity());
-                    inventoryRepository.save(inventory);
-                }
+//                if (existingDetail.getProduct() != null) {
+////                    Inventory inventory = existingDetail.getProduct().getInventory();
+////                    inventory.importInventory(existingDetail.getTotalQuantity());
+////                    inventoryRepository.save(inventory);
+//                }
                 it.remove();
             }
         }
@@ -238,11 +238,11 @@ public class OrderService {
         Optional<Order> order = orderRepository.findById(id);
         if (order.isPresent()){
             for (var orderDetail:order.get().getDetails()){
-                if (orderDetail.getProduct()!=null){
-                    Inventory inventory = orderDetail.getProduct().getInventory();
-                    inventory.importInventory(orderDetail.getTotalQuantity());
-                    inventoryRepository.save(inventory);
-                }
+//                if (orderDetail.getProduct()!=null){
+////                    Inventory inventory = orderDetail.getProduct().getInventory();
+////                    inventory.importInventory(orderDetail.getTotalQuantity());
+////                    inventoryRepository.save(inventory);
+//                }
             }
             orderRepository.deleteById(id);
 
@@ -289,12 +289,12 @@ public class OrderService {
                 .message("Cannot Found Customer With Id = "+customerId)
                 .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
                 .build());
-        List<Order> orders = orderRepository.findByCustomer_IdAndRemainingAmountGreaterThanOrderByCreatedAtDesc(customerId,0);
+//        List<Order> orders = orderRepository.findByCustomer_IdAndRemainingAmountGreaterThanOrderByCreatedAtDesc(customerId,0);
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
                         .status(SuccessCode.REQUEST.getStatus())
                         .message("Danh sách hóa đơn còn công nợ")
-                        .data(orders)
+                        .data(null)
                         .build()
         );
     }

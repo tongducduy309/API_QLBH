@@ -20,26 +20,29 @@ import java.math.BigDecimal;
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Inventory {
     @Id
-//    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @MapsId
-    @JoinColumn(name = "product_id", nullable = false)
-    @OnDelete(action = org.hibernate.annotations.OnDeleteAction.CASCADE)
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "product_id", nullable = false)
+//
+//    private Product product;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "variant_id", nullable = false)
     @JsonBackReference
-    private Product product;
+    private ProductVariant variant;
 
     @Column(nullable = false)
-    private Double totalBaseUnitQty;
+    private Double totalQty;
 
 
-    public void exportInventory(Double totalQuantity){
-        this.totalBaseUnitQty-=totalQuantity;
-    }
-
-    public void importInventory(Double totalQuantity){
-        this.totalBaseUnitQty+=totalQuantity;
+//    public void exportInventory(Double totalQuantity){
+//        this.totalQty-=totalQuantity;
+//    }
+//
+    public void addQuantity(Double totalQuantity){
+        this.totalQty+=totalQuantity;
     }
 
 

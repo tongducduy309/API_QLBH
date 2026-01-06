@@ -1,5 +1,6 @@
 package com.gener.qlbh.database;
 
+import com.gener.qlbh.dtos.request.ProductVariantCreateReq;
 import com.gener.qlbh.dtos.request.OrderDetailReq;
 import com.gener.qlbh.dtos.request.OrderReq;
 import com.gener.qlbh.dtos.request.ProductCreateReq;
@@ -9,6 +10,7 @@ import com.gener.qlbh.models.*;
 import com.gener.qlbh.repositories.*;
 import com.gener.qlbh.services.OrderService;
 import com.gener.qlbh.services.ProductService;
+import com.gener.qlbh.services.ProductVariantService;
 import com.gener.qlbh.services.PurchaseOrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +31,7 @@ import java.util.Map;
 public class database {
     @Bean
     CommandLineRunner initDatabase(CategoryRepository categoryRepository, ProductRepository productRepository, ProductService productService, CustomerRepository customerRepository,
-                                   OrderRepository orderRepository, OrderService orderService, PurchaseOrderService purchaseOrderService
+                                   OrderRepository orderRepository, OrderService orderService, PurchaseOrderService purchaseOrderService, ProductVariantService productVariantService
                                    ){
         return new CommandLineRunner() {
             @Override
@@ -43,8 +45,6 @@ public class database {
                 categoryRepository.save(category);
                 ProductCreateReq productCreateReq = ProductCreateReq.builder()
                         .name("Tôn Lạnh 0.40mm")
-                        .retailPrice(160000.0)
-                        .storePrice(155000.0)
                         .baseUnit("m")
                         .status(true)
                         .categoryId(category.getId())
@@ -100,17 +100,31 @@ public class database {
                         .customerId(customer.getId())
                         .build();
                 orderService.createOrder(order);
+                ProductVariantCreateReq vReq = ProductVariantCreateReq.builder()
+                        .productId(productId)        // đúng kiểu id
+                        .variantCode("0.40mm")
+                        .sku("TON-0.40")
+                        .retailPrice(160000.0)
+                        .storePrice(155000.0)
+                        .costPrice(80000.0)
+                        .build();
+
+                ResponseEntity<ResponseObject> vRes = productVariantService.createVariant(vReq);
+                ProductVariant createdVariant = (ProductVariant) vRes.getBody().getData();
+                Long variantId = createdVariant.getId();
+
+// sau đó tạo purchase order cho variant
                 PurchaseOrderCreateReq purchaseOrderCreateReq = PurchaseOrderCreateReq.builder()
-                        .productId(productId)
-                        .totalLength(500d)
+                        .productVariantId(variantId)  // dùng variant id
+                        .totalQty(500d)
                         .costPerUnit(80000d)
                         .supplier("Dong A")
                         .build();
                 purchaseOrderService.createPurchaseOrder(purchaseOrderCreateReq);
 //                Product product = Product.builder()
 //                        .name("Tôn Lạnh 0.40mm")
-//                        .retailPrice(160000.0)
-//                        .storePrice(155000.0)
+////                        .retailPrice(160000.0)
+////                        .storePrice(155000.0)
 //                        .baseUnit("m")
 //                        .category(category)
 //                        .build();
