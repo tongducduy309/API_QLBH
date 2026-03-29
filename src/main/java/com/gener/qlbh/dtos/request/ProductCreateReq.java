@@ -23,6 +23,7 @@ public class ProductCreateReq {
     private String baseUnit;
     @NotNull
     private Long categoryId;
+    private Double warningQuantity;
 
     private List<ProductVariantCreateReq> variants;
 }

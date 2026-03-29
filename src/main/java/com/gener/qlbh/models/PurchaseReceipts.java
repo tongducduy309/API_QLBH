@@ -11,25 +11,24 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "purchase_order_detail")
+@Table(name = "purchase_receipts")
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Builder
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-public class PurchaseOrder {
+public class PurchaseReceipts {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "variant_id", nullable = false)
+    @JoinColumn(name = "variant_id")
     private ProductVariant variant;
 
-    private Double stockingQty;
-    private Double totalLength;
+    private Double totalQuantity;
 
-    private Double costPerUnit;
+    private Double cost;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
@@ -38,9 +37,16 @@ public class PurchaseOrder {
 
     private String note;
 
+    private Long inventoryId;
+
 
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    public String getName(){
+        if (variant==null) return "Không xác định";
+        return variant.getProduct().getName();
     }
 }

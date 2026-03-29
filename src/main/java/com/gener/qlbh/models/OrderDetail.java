@@ -2,7 +2,6 @@ package com.gener.qlbh.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.gener.qlbh.enums.Method;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.Hibernate;
@@ -31,22 +30,18 @@ public class OrderDetail {
     private Double length;
     private Double quantity;
     private String baseUnit;
+    private Long inventoryId;
+
+    @Column(name="line_index")
+    private int lineIndex;
 
     public Double getSubtotal(){
-        if (this.getProductVariant()==null) return this.price;
-        if (this.getProductVariant().getProduct().getCategory().getMethod()==Method.SHEET_METAL){
-            return this.length*this.quantity*this.price;
-        }
-        return this.quantity*this.price;
-    }
-
-    public Double getTotalLength(){
-        if (this.getProductVariant()==null||this.getProductVariant().getProduct().getCategory().getMethod()==Method.MISC) return null;
-        return this.length*this.quantity;
+        if (this.length==null||this.length==0) return this.price*this.quantity;
+        return this.length*this.quantity*this.price;
     }
 
     public Double getTotalQuantity(){
-        if (this.getProductVariant()==null||this.getProductVariant().getProduct().getCategory().getMethod()==Method.MISC) return quantity;
+        if (this.length==null||this.length==0) return quantity;
         return this.length*this.quantity;
     }
 

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.gener.qlbh.enums.Method;
 import com.gener.qlbh.utils.StringUtil;
 import jakarta.persistence.*;
 import lombok.*;
@@ -47,6 +46,8 @@ public class Product {
     @JoinColumn(name = "category_id", nullable = false)
 //    @JsonBackReference
     private Category category;
+
+    private Double warningQuantity;
 
 
 

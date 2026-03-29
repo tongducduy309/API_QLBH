@@ -4,26 +4,21 @@ import com.gener.qlbh.dtos.request.ProductVariantCreateReq;
 import com.gener.qlbh.dtos.request.OrderDetailReq;
 import com.gener.qlbh.dtos.request.OrderReq;
 import com.gener.qlbh.dtos.request.ProductCreateReq;
-import com.gener.qlbh.dtos.request.PurchaseOrderCreateReq;
-import com.gener.qlbh.enums.Method;
+import com.gener.qlbh.dtos.request.PurchaseReceiptsCreateReq;
 import com.gener.qlbh.models.*;
 import com.gener.qlbh.repositories.*;
 import com.gener.qlbh.services.OrderService;
 import com.gener.qlbh.services.ProductService;
 import com.gener.qlbh.services.ProductVariantService;
-import com.gener.qlbh.services.PurchaseOrderService;
+import com.gener.qlbh.services.PurchaseReceiptsService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
-import tools.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 
 @Configuration
@@ -31,96 +26,117 @@ import java.util.Map;
 public class database {
     @Bean
     CommandLineRunner initDatabase(CategoryRepository categoryRepository, ProductRepository productRepository, ProductService productService, CustomerRepository customerRepository,
-                                   OrderRepository orderRepository, OrderService orderService, PurchaseOrderService purchaseOrderService, ProductVariantService productVariantService
+                                   OrderRepository orderRepository, OrderService orderService, PurchaseReceiptsService purchaseReceiptsService, ProductVariantService productVariantService
                                    ){
         return new CommandLineRunner() {
             @Override
             public void run(String... args) throws Exception {
 
-                Category category = Category.builder()
-                        .name("Tôn")
-                        .method(Method.SHEET_METAL)
-                        .defaultBaseUnit("m")
-                        .build();
-                categoryRepository.save(category);
-                ProductCreateReq productCreateReq = ProductCreateReq.builder()
-                        .name("Tôn Lạnh 0.40mm")
-                        .baseUnit("m")
-                        .status(true)
-                        .categoryId(category.getId())
-
-                        .build();
-                ResponseEntity<ResponseObject> res = productService.createProduct(productCreateReq);
-                Long productId;
-                String nameProduct;
-                try {
-                    // 1. ÉP KIỂU TRỰC TIẾP thành Product model
-                    //    (Đảm bảo import đúng: com.gener.qlbh.models.Product)
-                    Product createdProduct = (Product) res.getBody().getData();
-
-                    // 2. Lấy ID từ đối tượng Product đã ép kiểu
-                    productId = createdProduct.getId();
-                    nameProduct = createdProduct.getName();
-
-                    System.out.println("-> Đã tạo Product ID: " + productId);
-                } catch (Exception e) {
-                    System.err.println("LỖI TRÍCH XUẤT PRODUCT ID: " + e.getMessage());
-                    // In stack trace để debug thêm nếu cần
-                    e.printStackTrace();
-                    System.err.println("Dừng khởi tạo Order.");
-                    return;
-                }
-
-                Customer customer = Customer.builder()
-                        .name("Test")
-                        .phone("0586152003")
-                        .address("HCM")
-                        .build();
-                customerRepository.save(customer);
-                OrderDetailReq orderDetailReqA = OrderDetailReq.builder()
-                        .productId(productId)
-                        .length(2d)
-                        .quantity(5d)
-                        .price(160000d)
-                        .name(nameProduct)
-                        .build();
-                OrderDetailReq orderDetailReqB = OrderDetailReq.builder()
-                        .quantity(1d)
-                        .price(20000d)
-                        .name("Công uốn")
-                        .build();
-                List<OrderDetailReq> orderDetailReqs = new ArrayList<>();
-                orderDetailReqs.add(orderDetailReqA);
-                orderDetailReqs.add(orderDetailReqB);
-                OrderReq order = OrderReq.builder()
-                        .note("Giao sáng mai, liên hệ trước 30 phút.")
-                        .paidAmount(50000d)
-                        .shippingFee(10000d)
-                        .orderDetailReqs(orderDetailReqs)
-                        .customerId(customer.getId())
-                        .build();
-                orderService.createOrder(order);
-                ProductVariantCreateReq vReq = ProductVariantCreateReq.builder()
-                        .productId(productId)        // đúng kiểu id
-                        .variantCode("0.40mm")
-                        .sku("TON-0.40")
-                        .retailPrice(160000.0)
-                        .storePrice(155000.0)
-                        .costPrice(80000.0)
-                        .build();
-
-                ResponseEntity<ResponseObject> vRes = productVariantService.createVariant(vReq);
-                ProductVariant createdVariant = (ProductVariant) vRes.getBody().getData();
-                Long variantId = createdVariant.getId();
-
-// sau đó tạo purchase order cho variant
-                PurchaseOrderCreateReq purchaseOrderCreateReq = PurchaseOrderCreateReq.builder()
-                        .productVariantId(variantId)  // dùng variant id
-                        .totalQty(500d)
-                        .costPerUnit(80000d)
-                        .supplier("Dong A")
-                        .build();
-                purchaseOrderService.createPurchaseOrder(purchaseOrderCreateReq);
+//                Category category = Category.builder()
+//                        .name("Tôn")
+//                        .defaultBaseUnit("m")
+//                        .build();
+//                categoryRepository.save(category);
+//                ProductCreateReq productCreateReq = ProductCreateReq.builder()
+//                        .name("Tôn Lạnh")
+//                        .baseUnit("m")
+//                        .status(true)
+//                        .categoryId(category.getId())
+//
+//                        .build();
+//                ResponseEntity<ResponseObject> res = productService.createProduct(productCreateReq);
+//                Long productId;
+//                String nameProduct;
+//                try {
+//                    // 1. ÉP KIỂU TRỰC TIẾP thành Product model
+//                    //    (Đảm bảo import đúng: com.gener.qlbh.models.Product)
+//                    Product createdProduct = (Product) res.getBody().getData();
+//
+//                    // 2. Lấy ID từ đối tượng Product đã ép kiểu
+//                    productId = createdProduct.getId();
+//                    nameProduct = createdProduct.getName();
+//
+//                    System.out.println("-> Đã tạo Product ID: " + productId);
+//                } catch (Exception e) {
+//                    System.err.println("LỖI TRÍCH XUẤT PRODUCT ID: " + e.getMessage());
+//                    // In stack trace để debug thêm nếu cần
+//                    e.printStackTrace();
+//                    System.err.println("Dừng khởi tạo Order.");
+//                    return;
+//                }
+//
+//                Customer customer = Customer.builder()
+//                        .name("Test")
+//                        .phone("0586152003")
+//                        .address("HCM")
+//                        .build();
+//                customerRepository.save(customer);
+//
+//                ProductVariantCreateReq vReq = ProductVariantCreateReq.builder()
+//                        .productId(productId)        // đúng kiểu id
+//                        .variantCode("0.40mm")
+//                        .retailPrice(160000.0)
+//                        .storePrice(155000.0)
+//                        .costPrice(80000.0)
+//                        .build();
+//
+//                ResponseEntity<ResponseObject> vRes = productVariantService.createVariant(vReq);
+//                ProductVariant createdVariant = (ProductVariant) vRes.getBody().getData();
+//                Long variantId = createdVariant.getId();
+//
+//// sau đó tạo purchase order cho variant
+//                PurchaseReceiptsCreateReq purchaseReceiptsCreateReq = PurchaseReceiptsCreateReq.builder()
+//                        .productVariantId(variantId)  // dùng variant id
+//                        .totalQuantity(500d)
+//                        .cost(80000d)
+//                        .supplier("Dong A")
+//                        .build();
+//                purchaseReceiptsService.createPurchaseReceipts(purchaseReceiptsCreateReq);
+//
+//                OrderDetailReq orderDetailReqA = OrderDetailReq.builder()
+////                        .productVariantId()(productId)
+//                        .productVariantId(variantId)
+//                        .length(2d)
+//                        .quantity(5d)
+//                        .price(160000d)
+//                        .name(nameProduct)
+//                        .inventoryId(1L)
+//                        .build();
+//                OrderDetailReq orderDetailReqB = OrderDetailReq.builder()
+//                        .quantity(1d)
+//                        .price(20000d)
+//                        .name("Công uốn")
+//                        .build();
+//                OrderDetailReq orderDetailReqC = OrderDetailReq.builder()
+//                        .quantity(1d)
+//                        .price(20000d)
+//                        .name("Công uốn")
+//                        .build();
+//                OrderDetailReq orderDetailReqD = OrderDetailReq.builder()
+//                        .quantity(1d)
+//                        .price(20000d)
+//                        .name("Công uốn")
+//                        .build();
+//                OrderDetailReq orderDetailReqE = OrderDetailReq.builder()
+//                        .quantity(1d)
+//                        .price(20000d)
+//                        .name("Công uốn")
+//                        .build();
+//                List<OrderDetailReq> orderDetailReqs = new ArrayList<>();
+//                orderDetailReqs.add(orderDetailReqA);
+//                orderDetailReqs.add(orderDetailReqB);
+//                orderDetailReqs.add(orderDetailReqB);
+//                orderDetailReqs.add(orderDetailReqC);
+//                orderDetailReqs.add(orderDetailReqD);
+//                orderDetailReqs.add(orderDetailReqE);
+//                OrderReq order = OrderReq.builder()
+//                        .note("Giao sáng mai, liên hệ trước 30 phút.")
+//                        .paidAmount(50000d)
+//                        .shippingFee(10000d)
+//                        .orderDetailReqs(orderDetailReqs)
+//                        .customerId(customer.getId())
+//                        .build();
+//                orderService.createOrder(order);
 //                Product product = Product.builder()
 //                        .name("Tôn Lạnh 0.40mm")
 ////                        .retailPrice(160000.0)

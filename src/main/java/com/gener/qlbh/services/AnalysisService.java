@@ -29,9 +29,9 @@ public class AnalysisService {
 
         LocalDateTime endOfDay = endDate.atTime(LocalTime.MAX);
 
-//        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startOfDay,endOfDay);
+        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startOfDay,endOfDay);
 
-//        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByDay(startOfDay,endOfDay);
+        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByDay(startOfDay,endOfDay);
 
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
@@ -39,8 +39,8 @@ public class AnalysisService {
                         .message("Analysis Date Successfully")
                         .data(
                                 SalesAnalysisResponse.builder()
-                                        .analysisRes(null)
-                                        .buckets(null)
+                                        .analysisRes(analysisRes)
+                                        .buckets(revenueBucket)
                                         .build()
                         )
                         .build()
@@ -59,9 +59,9 @@ public class AnalysisService {
         LocalDateTime endDateTime = endOfWeek.atTime(LocalTime.MAX);
 
 
-//        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startDateTime,endDateTime);
+        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startDateTime,endDateTime);
 //
-//        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByWeek(startDateTime,endDateTime);
+        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByWeek(startDateTime,endDateTime);
 
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
@@ -69,8 +69,8 @@ public class AnalysisService {
                         .message("Weekly Analysis Date Successfully")
                         .data(
                                 SalesAnalysisResponse.builder()
-                                        .analysisRes(null)
-                                        .buckets(null)
+                                        .analysisRes(analysisRes)
+                                        .buckets(revenueBucket)
                                         .build()
                         )
                         .build()
@@ -83,9 +83,9 @@ public class AnalysisService {
         LocalDateTime startDateTime = startOfMonth.atStartOfDay();
         LocalDateTime endDateTime = endOfMonth.atTime(LocalTime.MAX);
 
-//        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startDateTime,endDateTime);
+        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startDateTime,endDateTime);
 
-//        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByMonth(startDateTime,endDateTime);
+        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByMonth(startDateTime,endDateTime);
 
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
@@ -93,8 +93,8 @@ public class AnalysisService {
                         .message("Monthly Analysis Date Successfully")
                         .data(
                                 SalesAnalysisResponse.builder()
-                                        .analysisRes(null)
-                                        .buckets(null)
+                                        .analysisRes(analysisRes)
+                                        .buckets(revenueBucket)
                                         .build()
                         )
                         .build()
@@ -115,10 +115,10 @@ public class AnalysisService {
         LocalDateTime endDateTime   = endOfQuarter.atTime(LocalTime.MAX); // inclusive
 
 
-//        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startDateTime, endDateTime);
+        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startDateTime, endDateTime);
 
 
-//        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByQuarter(startDateTime, endDateTime);
+        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByQuarter(startDateTime, endDateTime);
 
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
@@ -126,8 +126,8 @@ public class AnalysisService {
                         .message("Quarterly Analysis Date Successfully")
                         .data(
                                 SalesAnalysisResponse.builder()
-                                        .analysisRes(null)
-                                        .buckets(null)
+                                        .analysisRes(analysisRes)
+                                        .buckets(revenueBucket)
                                         .build()
                         )
                         .build()
@@ -139,9 +139,9 @@ public class AnalysisService {
         LocalDate endOfYear = endDate.with(TemporalAdjusters.lastDayOfYear());
         LocalDateTime startDateTime = startOfYear.atStartOfDay();
         LocalDateTime endDateTime = endOfYear.atTime(LocalTime.MAX);
-//        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startDateTime,endDateTime);
+        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startDateTime,endDateTime);
 
-//        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByYear(startDateTime,endDateTime);
+        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByYear(startDateTime,endDateTime);
 
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
@@ -149,8 +149,8 @@ public class AnalysisService {
                         .message("Yearly Analysis Date Successfully")
                         .data(
                                 SalesAnalysisResponse.builder()
-                                        .analysisRes(null)
-                                        .buckets(null)
+                                        .analysisRes(analysisRes)
+                                        .buckets(revenueBucket)
                                         .build()
                         )
                         .build()

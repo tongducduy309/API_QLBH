@@ -34,7 +34,12 @@ public interface OrderMapper {
     @Mapping(target = "subtotal",       ignore = true)
     @Mapping(target = "details",        ignore = true)
     @Mapping(target = "createdAt",      ignore = true)
+    @Mapping(target = "nameCustomer",    source = "nameCustomer")
+    @Mapping(target = "phoneCustomer",    source = "phoneCustomer")
+    @Mapping(target = "addressCustomer",    source = "addressCustomer")
     Order toOrder(OrderReq req);
+
+
 
     @Mapping(target = "id",      ignore = true)
     @Mapping(target = "order",   ignore = true)
@@ -43,6 +48,9 @@ public interface OrderMapper {
     @Mapping(target = "quantity",source = "quantity")
     @Mapping(target = "price",source = "price")
     @Mapping(target = "name",source = "name")
+    @Mapping(target = "baseUnit",source = "baseUnit")
+    @Mapping(target = "inventoryId",source = "inventoryId")
+    @Mapping(target = "lineIndex",source = "lineIndex")
     OrderDetail toOrderDetail(OrderDetailReq req);
 
     @Mapping(target = "id",      source = "id")
@@ -52,15 +60,23 @@ public interface OrderMapper {
     @Mapping(target = "quantity",source = "quantity")
     @Mapping(target = "price",source = "price")
     @Mapping(target = "name",source = "name")
+    @Mapping(target = "baseUnit",source = "baseUnit")
+    @Mapping(target = "inventoryId",source = "inventoryId")
     OrderDetail toOrderDetail(OrderDetailUpdateReq req);
 
     Set<OrderDetail> toEntityDetails_Create(List<OrderDetailReq> reqs);
 
     Set<OrderDetail> toEntityDetails_Update(List<OrderDetailUpdateReq> reqs);
 
-
+    @Mapping(target = "customer.id", source = "idCustomer")
+    @Mapping(target = "customer.name", source = "nameCustomer")
+    @Mapping(target = "customer.phone", source = "phoneCustomer")
+    @Mapping(target = "customer.address", source = "addressCustomer")
+    @Mapping(target = "taxAmount",source = "taxAmount")
+    @Mapping(target = "total",source = "total")
     OrderRes toOrderRes(Order order);
 
+    List<OrderRes> toOrderRes(List<Order> orders);
 
     @Mapping(target = "id",          source = "id")
     @Mapping(target = "length",      source = "length")
@@ -68,10 +84,10 @@ public interface OrderMapper {
     @Mapping(target = "price",        source = "price")
 //    @Mapping(target = "sku",         source = "product.variants.sku")
     @Mapping(target = "name",        source = "name")
-//    @Mapping(target = "productId",   source = "product.id")
+    @Mapping(target = "productVariantId",   source = "productVariant.id")
     @Mapping(target = "baseUnit",    source = "baseUnit")
     @Mapping(target = "subtotal",    source = "subtotal")
-    @Mapping(target = "totalLength",    source = "totalLength")
+    @Mapping(target = "totalQuantity",    source = "totalQuantity")
     OrderDetailRes toOrderDetailRes(OrderDetail orderDetail);
 
     @Mapping(target = "total",    source = "total")

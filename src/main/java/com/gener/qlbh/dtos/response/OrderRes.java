@@ -15,7 +15,9 @@ import java.util.Set;
 @Getter
 public class OrderRes {
     private String id;
-    private Customer customer;
+    private OrderCustomerRes customer;
+    private Double tax;
+    private Double taxAmount;
 
     private String note;
 
@@ -25,6 +27,7 @@ public class OrderRes {
     private Double subtotal;
     private Double paidDept ;
     private Double changeAmount;
+    private Double total;
     private Set<OrderDetailRes> details;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

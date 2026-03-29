@@ -5,6 +5,7 @@ import com.gener.qlbh.dtos.request.OrderReq;
 import com.gener.qlbh.enums.ErrorCode;
 import com.gener.qlbh.enums.SuccessCode;
 import com.gener.qlbh.exception.APIException;
+import com.gener.qlbh.mapper.InventoryMapper;
 import com.gener.qlbh.mapper.OrderMapper;
 import com.gener.qlbh.models.*;
 import com.gener.qlbh.repositories.CategoryRepository;
@@ -23,15 +24,16 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class InventoryService {
     private final InventoryRepository inventoryRepository;
+    private final InventoryMapper inventoryMapper;
     private final ProductRepository productRepository;
     private final OrderMapper orderMapper;
 
-    public ResponseEntity<ResponseObject> getAllInventory(){
+    public ResponseEntity<ResponseObject> getAllInventory(boolean status){
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
                         .status(SuccessCode.REQUEST.getStatus())
                         .message("Get All Inventory Successfully")
-                        .data(inventoryRepository.findAll())
+                        .data(inventoryMapper.toInventoryRes(inventoryRepository.findAllActiveVariantAndProduct(status)))
                         .build()
         );
 
@@ -42,14 +44,14 @@ public class InventoryService {
         List<String> list = new ArrayList<>();
         for (OrderDetailReq orderDetailReq:orderReq.getOrderDetailReqs()){
 
-            if(orderDetailReq.getProductId()!=null){
-                Product product = productRepository.findById(orderDetailReq.getProductId()).orElseThrow(()-> APIException.builder()
+            if(orderDetailReq.getProductVariantId()!=null){
+                Product product = productRepository.findById(orderDetailReq.getProductVariantId()).orElseThrow(()-> APIException.builder()
                         .status(ErrorCode.NOT_FOUND.getStatus())
-                        .message("Cannot Found Product With Id = "+orderDetailReq.getProductId())
+                        .message("Cannot Found Product With Id = "+orderDetailReq.getProductVariantId())
                         .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
                         .build());
                 OrderDetail orderDetail = orderMapper.toOrderDetail(orderDetailReq);
-                Double totalLength = orderDetail.getTotalLength();
+                Double totalLength = orderDetail.getTotalQuantity();
 //                Inventory inventory = product.getInventory();
 //                if((totalLength!=null&&totalLength>inventory.getTotalBaseUnitQty())||(totalLength==null&&orderDetail.getQuantity()>inventory.getTotalBaseUnitQty())){
 ////                    throw APIException.builder()
@@ -67,6 +69,19 @@ public class InventoryService {
                         .message("Check Inventory Successfully")
                         .data(list)
                         .build()
+        );
+    }
+
+    @Transactional
+    public ResponseEntity<ResponseObject> deleteInventory(Long id){
+        Optional<Inventory> inventory = inventoryRepository.findById(id);
+        if (inventory.isPresent()){
+
+            inventoryRepository.deleteById(id);
+
+        }
+        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
+                new ResponseObject(SuccessCode.REQUEST.getStatus(), "Delete Inventory Successfully","")
         );
     }
 }

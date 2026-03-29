@@ -20,7 +20,7 @@ import java.math.BigDecimal;
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Inventory {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
 //    @ManyToOne(fetch = FetchType.LAZY)
@@ -33,8 +33,10 @@ public class Inventory {
     @JsonBackReference
     private ProductVariant variant;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Double totalQty;
+
+    private Double cost;
 
 
 //    public void exportInventory(Double totalQuantity){
@@ -43,6 +45,11 @@ public class Inventory {
 //
     public void addQuantity(Double totalQuantity){
         this.totalQty+=totalQuantity;
+    }
+
+    public void subQuantity(Double totalQuantity){
+        this.totalQty=this.totalQty>totalQuantity?this.totalQty-totalQuantity:0;
+
     }
 
 

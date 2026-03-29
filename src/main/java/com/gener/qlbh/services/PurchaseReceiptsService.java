@@ -1,0 +1,137 @@
+package com.gener.qlbh.services;
+
+import com.gener.qlbh.dtos.request.PurchaseReceiptsCreateReq;
+import com.gener.qlbh.enums.ErrorCode;
+import com.gener.qlbh.enums.PurchaseReceiptMethod;
+import com.gener.qlbh.enums.SuccessCode;
+import com.gener.qlbh.exception.APIException;
+import com.gener.qlbh.mapper.PurchaseReceiptsMapper;
+import com.gener.qlbh.models.*;
+import com.gener.qlbh.repositories.InventoryRepository;
+import com.gener.qlbh.repositories.ProductRepository;
+import com.gener.qlbh.repositories.ProductVariantRepository;
+import com.gener.qlbh.repositories.PurchaseReceiptsRepository;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
+@Service
+@RequiredArgsConstructor
+public class PurchaseReceiptsService {
+    private final PurchaseReceiptsRepository purchaseReceiptsRepository;
+    private final ProductRepository productRepository;
+    private final PurchaseReceiptsMapper purchaseReceiptsMapper;
+    private final InventoryRepository inventoryRepository;
+    private final ProductVariantRepository productVariantRepository;
+
+    public ResponseEntity<ResponseObject> getAllPurchaseReceipts(){
+        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
+                ResponseObject.builder()
+                        .status(SuccessCode.REQUEST.getStatus())
+                        .message("Get All Purchase Receipts Successfully")
+                        .data(purchaseReceiptsMapper.toPurchaseReceiptsRes(purchaseReceiptsRepository.findAll()))
+                        .build()
+        );
+
+    }
+
+    @Transactional
+    public ResponseEntity<ResponseObject> createPurchaseReceipts(PurchaseReceiptsCreateReq req) throws APIException {
+        ProductVariant productVariant = productVariantRepository.findById(req.getProductVariantId()).orElseThrow(()-> APIException.builder()
+                .status(ErrorCode.NOT_FOUND.getStatus())
+                .message("Cannot Found Product Variant With Id = "+req.getProductVariantId())
+                .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
+                .build());
+
+        PurchaseReceiptMethod method = Optional
+                .ofNullable(req.getPurchaseReceiptMethod())
+                .orElse(PurchaseReceiptMethod.NEW);
+
+
+        PurchaseReceipts purchaseReceipts = purchaseReceiptsMapper.toPurchaseReceipts(req);
+
+        purchaseReceipts.setVariant(productVariant);
+
+        Inventory inventory = new Inventory();
+        inventory = inventoryRepository.findByVariantId(req.getProductVariantId());
+        if (method.equals(PurchaseReceiptMethod.ADDITIONAL)&&inventory!=null){
+            inventory.addQuantity(req.getTotalQuantity());
+        }else{
+            inventory = Inventory.builder()
+                    .variant(productVariant)
+                    .totalQty(req.getTotalQuantity())
+                    .build();
+        }
+        inventory.setCost(req.getCost());
+        inventoryRepository.save(inventory);
+
+        return ResponseEntity.status(SuccessCode.CREATE.getHttpStatusCode()).body(
+                ResponseObject.builder()
+                        .status(SuccessCode.CREATE.getStatus())
+                        .message("Create Purchase Receipts Successfully")
+                        .data(purchaseReceiptsRepository.save(purchaseReceipts))
+                        .build()
+        );
+
+    }
+
+    @Transactional
+    public ResponseEntity<ResponseObject> deletePurchaseReceipts(Long id) throws APIException {
+
+        PurchaseReceipts receipt = purchaseReceiptsRepository.findById(id)
+                .orElseThrow(() -> APIException.builder()
+                        .status(ErrorCode.NOT_FOUND.getStatus())
+                        .message("Cannot Found PurchaseReceipt With Id = " + id)
+                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
+                        .build());
+
+//        ProductVariant variant = receipt.getVariant();
+//        if (variant == null) {
+//            throw APIException.builder()
+//                    .status(ErrorCode.BAD_REQUEST.getStatus())
+//                    .message("PurchaseReceipt has no product variant")
+//                    .httpStatusCode(ErrorCode.BAD_REQUEST.getHttpStatusCode())
+//                    .build();
+//        }
+
+        Double qty = receipt.getTotalQuantity();
+        if (qty == null || qty <= 0) {
+            throw APIException.builder()
+                    .status(ErrorCode.BAD_REQUEST.getStatus())
+                    .message("Invalid receipt quantity")
+                    .httpStatusCode(ErrorCode.BAD_REQUEST.getHttpStatusCode())
+                    .build();
+        }
+
+        Inventory inv = inventoryRepository.findById(receipt.getInventoryId())
+                .orElseThrow(() -> APIException.builder()
+                        .status(ErrorCode.NOT_FOUND.getStatus())
+                        .message("Cannot Found Inventory With Id = " + receipt.getInventoryId())
+                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
+                        .build());
+
+        // Check không cho âm kho
+        if (inv.getTotalQty() < qty) {
+            throw APIException.builder()
+                    .status(ErrorCode.BAD_REQUEST.getStatus())
+                    .message("Cannot delete receipt because current stock is smaller than receipt quantity")
+                    .httpStatusCode(ErrorCode.BAD_REQUEST.getHttpStatusCode())
+                    .build();
+        }
+
+        inv.subQuantity(qty);
+        inventoryRepository.save(inv);
+
+        purchaseReceiptsRepository.delete(receipt);
+
+
+
+        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
+                new ResponseObject(SuccessCode.REQUEST.getStatus(),
+                        "Delete Purchase Receipts Successfully", "")
+        );
+    }
+}

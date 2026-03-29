@@ -11,10 +11,12 @@ import lombok.*;
 public class OrderDetailReq {
     @NotNull
     private String name;
-    private Long productId;
+    private Long productVariantId;
     private Double length;
     private Double quantity;
     @NotNull
     private Double price;
     private String baseUnit;
+    private Long inventoryId;
+    private int lineIndex;
 }

@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -106,38 +107,70 @@ public class ProductService {
         );
     }
 
+
     @Transactional
     public ResponseEntity<ResponseObject> updateProduct(Long id, ProductUpdateReq req) throws APIException {
-        boolean existsProduct = productRepository.existsById(id);
-        if (!existsProduct) {
-            throw APIException.builder()
-                    .status(ErrorCode.NOT_FOUND.getStatus())
-                    .message("Cannot Found Product With Id = " + id)
-                    .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                    .build();
-        }
 
-        Category category = categoryRepository.findById(req.getCategoryId()).orElseThrow(()-> APIException.builder()
-                .status(ErrorCode.NOT_FOUND.getStatus())
-                .message("Cannot Found Category With Id = "+req.getCategoryId())
-                .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                .build());
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> APIException.builder()
+                        .status(ErrorCode.NOT_FOUND.getStatus())
+                        .message("Cannot Found Product With Id = " + id)
+                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
+                        .build());
 
-        Product newProduct = productMapper.toProduct(req);
-        newProduct.setId(id);
+        Category category = categoryRepository.findById(req.getCategoryId())
+                .orElseThrow(() -> APIException.builder()
+                        .status(ErrorCode.NOT_FOUND.getStatus())
+                        .message("Cannot Found Category With Id = "+req.getCategoryId())
+                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
+                        .build());
 
-        newProduct.setCategory(category);
+        product.setName(req.getName());
+        product.setStatus(req.isStatus());
+        product.setBaseUnit(req.getBaseUnit());
+        product.setWarningQuantity(req.getWarningQuantity());
+        product.setCategory(category);
+
+        // Map variant hiện có theo id
+        Map<Long, ProductVariant> current = product.getVariants().stream()
+                .filter(v -> v.getId() != null)
+                .collect(Collectors.toMap(ProductVariant::getId, v -> v));
+
         Set<Long> keepIds = new HashSet<>();
 
-        if (newProduct.getVariants()!=null){
-            for (ProductVariant productVariant: newProduct.getVariants()){
-                productVariant.setProduct(newProduct);
-                keepIds.add(productVariant.getId());
+        // update/create variant
+        if (req.getVariants() != null) {
+            for (ProductVariantUpdateReq vreq : req.getVariants()) {
+                if (vreq.getId() == null) {
+                    ProductVariant v = new ProductVariant();
+                    v.setVariantCode(vreq.getVariantCode());
+                    v.setProduct(product);
+                    v.setWeight(vreq.getWeight());
+                    v.setRetailPrice(vreq.getRetailPrice());
+                    v.setStorePrice(vreq.getStorePrice());
+                    v.setStatus(vreq.getStatus());
+                    product.getVariants().add(v);
+                } else {
+                    ProductVariant v = current.get(vreq.getId());
+                    if (v == null) throw APIException.builder()
+                            .status(ErrorCode.NOT_FOUND.getStatus())
+                            .message("Cannot Found Variant With Id = "+vreq.getId())
+                            .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
+                            .build();
+                    v.setVariantCode(vreq.getVariantCode());
+                    v.setWeight(vreq.getWeight());
+                    v.setRetailPrice(vreq.getRetailPrice());
+                    v.setStorePrice(vreq.getStorePrice());
+                    v.setStatus(vreq.getStatus());
+
+                    keepIds.add(v.getId());
+                }
             }
         }
 
-        List<Long> deleteIds = req.getVariants().stream()
-                .map(ProductVariantUpdateReq::getId)
+        // tìm variant cần xóa: lấy từ DB (product.getVariants) so với keepIds
+        List<Long> deleteIds = product.getVariants().stream()
+                .map(ProductVariant::getId)
                 .filter(Objects::nonNull)
                 .filter(vid -> !keepIds.contains(vid))
                 .toList();
@@ -150,17 +183,13 @@ public class ProductService {
                     .build();
         }
 
-        if (!deleteIds.isEmpty()) {
-            req.getVariants().removeIf(v -> v.getId() != null && deleteIds.contains(v.getId()));
-        }
+        // remove khỏi collection => orphanRemoval ở Product-Variant sẽ delete variant
+        product.getVariants().removeIf(v -> v.getId() != null && deleteIds.contains(v.getId()));
 
+        Product saved = productRepository.save(product);
 
-
-
-
-        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
-                new ResponseObject(SuccessCode.REQUEST.getStatus(), "Update Product Successfully",productRepository.save(newProduct))
-        );
+        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode())
+                .body(new ResponseObject(SuccessCode.REQUEST.getStatus(), "Update Product Successfully", saved));
     }
 
     @Transactional

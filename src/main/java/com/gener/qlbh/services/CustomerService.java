@@ -3,6 +3,7 @@ package com.gener.qlbh.services;
 import com.gener.qlbh.dtos.request.CustomerCreateReq;
 import com.gener.qlbh.dtos.request.CustomerUpdateReq;
 import com.gener.qlbh.dtos.request.ProductUpdateReq;
+import com.gener.qlbh.dtos.response.CustomerDetailRes;
 import com.gener.qlbh.enums.ErrorCode;
 import com.gener.qlbh.enums.SuccessCode;
 import com.gener.qlbh.exception.APIException;
@@ -44,11 +45,13 @@ public class CustomerService {
                 .message("Cannot Found Customer With Id = "+id)
                 .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
                 .build());
+        CustomerDetailRes customerDetailRes = customerMapper.toCustomerDetailRes(customer);
+        customerDetailRes.setPoint(customerRepository.getPoint(id));
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
                         .status(SuccessCode.REQUEST.getStatus())
                         .message("Get Customer With Id = "+id+" Successfully")
-                        .data(customer)
+                        .data(customerDetailRes)
                         .build()
         );
 

@@ -1,17 +1,18 @@
 package com.gener.qlbh.services;
 
-import com.gener.qlbh.dtos.request.OrderReq;
-import com.gener.qlbh.dtos.request.OrderUpdateReq;
-import com.gener.qlbh.dtos.request.PaidDeptReq;
+import com.gener.qlbh.dtos.request.*;
+import com.gener.qlbh.dtos.response.CustomerDetailRes;
 import com.gener.qlbh.enums.ErrorCode;
 import com.gener.qlbh.enums.SuccessCode;
 import com.gener.qlbh.exception.APIException;
+import com.gener.qlbh.mapper.CustomerMapper;
 import com.gener.qlbh.mapper.OrderMapper;
 import com.gener.qlbh.models.*;
 import com.gener.qlbh.repositories.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -26,18 +28,19 @@ import java.util.*;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final CustomerRepository customerRepository;
-    private final ProductRepository productRepository;
+    private final CustomerMapper customerMapper;
     private final OrderMapper orderMapper;
     private final OrderNumberService orderNumberService;
     private final InventoryRepository inventoryRepository;
     private final OrderDetailRepository orderDetailRepository;
+    private final ProductVariantRepository productVariantRepository;
 
     public ResponseEntity<ResponseObject> getAllOrders(){
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
                         .status(SuccessCode.REQUEST.getStatus())
                         .message("Get All Orders Successfully")
-                        .data(orderRepository.findAll())
+                        .data(orderMapper.toOrderRes(orderRepository.findAll()))
                         .build()
         );
 
@@ -50,11 +53,12 @@ public class OrderService {
                 .message("Cannot Found Order With Id = "+id)
                 .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
                 .build());
+
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
                         .status(SuccessCode.REQUEST.getStatus())
                         .message("Get Order With Id = "+id+" Successfully")
-                        .data(order)
+                        .data(orderMapper.toOrderRes(order))
                         .build()
         );
 
@@ -76,11 +80,11 @@ public class OrderService {
         Double subtotal = 0d;
 
         for (var orderDetailReq:req.getOrderDetailReqs()){
-            Product product =null;
-            if(orderDetailReq.getProductId()!=null){
-                product = productRepository.findById(orderDetailReq.getProductId()).orElseThrow(()-> APIException.builder()
+            ProductVariant productVariant =null;
+            if(orderDetailReq.getProductVariantId()!=null){
+                productVariant = productVariantRepository.findById(orderDetailReq.getProductVariantId()).orElseThrow(()-> APIException.builder()
                         .status(ErrorCode.NOT_FOUND.getStatus())
-                        .message("Cannot Found Product With Id = "+orderDetailReq.getProductId())
+                        .message("Cannot Found Product Variant With Id = "+orderDetailReq.getProductVariantId())
                         .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
                         .build());
             }
@@ -89,14 +93,20 @@ public class OrderService {
 
 
             orderDetail.setOrder(order);
-//            orderDetail.setProductVariant(product);
-            orderDetail.setBaseUnit(product==null?orderDetailReq.getBaseUnit():product.getBaseUnit());
+            orderDetail.setProductVariant(productVariant);
+            orderDetail.setBaseUnit(orderDetail.getBaseUnit());
             orderDetail.setPrice(orderDetailReq.getPrice());
-            if (product!=null){
-//                Inventory inventory = product.getInventory();
-//                inventory.exportInventory(orderDetail.getTotalQuantity());
-//                inventoryRepository.save(inventory);
+            orderDetail.setLineIndex(orderDetailReq.getLineIndex());
+            if (productVariant!=null){
+                Optional<Inventory> inventory = inventoryRepository.findById(orderDetailReq.getInventoryId());
+                if (inventory.isPresent()){
+                    inventory.get().subQuantity(orderDetail.getTotalQuantity());
+                    inventoryRepository.save(inventory.get());
+                    orderDetail.setInventoryId(inventory.get().getId());
+                }
+
             }
+
             details.add(orderDetail);
             subtotal+=orderDetail.getSubtotal();
 
@@ -116,7 +126,6 @@ public class OrderService {
 
 
 
-
         return ResponseEntity.status(SuccessCode.CREATE.getHttpStatusCode()).body(
                 ResponseObject.builder()
                         .status(SuccessCode.CREATE.getStatus())
@@ -129,120 +138,174 @@ public class OrderService {
 
     @Transactional
     public ResponseEntity<ResponseObject> updateOrder(String id, OrderUpdateReq req) throws APIException {
-        Order order = orderRepository.findById(id).orElseThrow(()-> APIException.builder()
-                .status(ErrorCode.NOT_FOUND.getStatus())
-                .message("Cannot Found Order With Id = "+id)
-                .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                .build());
 
+    /* =========================
+       1️⃣ LOAD ORDER
+       ========================= */
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> APIException.builder()
+                        .status(ErrorCode.NOT_FOUND.getStatus())
+                        .message("Cannot Found Order With Id = " + id)
+                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
+                        .build());
+
+    /* =========================
+       2️⃣ LOAD CUSTOMER (OPTIONAL)
+       ========================= */
         Customer customer = null;
-        if (req.getCustomerId()!=null){
-            customer = customerRepository.findById(req.getCustomerId()).orElseThrow(()-> APIException.builder()
-                    .status(ErrorCode.NOT_FOUND.getStatus())
-                    .message("Cannot Found Customer With Id = "+req.getCustomerId())
-                    .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                    .build());
+        if (req.getCustomerId() != null) {
+            customer = customerRepository.findById(req.getCustomerId())
+                    .orElseThrow(() -> APIException.builder()
+                            .status(ErrorCode.NOT_FOUND.getStatus())
+                            .message("Cannot Found Customer With Id = " + req.getCustomerId())
+                            .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
+                            .build());
         }
 
-        Set<OrderDetail> persistentDetails = order.getDetails();
-        if (persistentDetails == null) {
-            persistentDetails = new HashSet<>();
-            order.setDetails(persistentDetails);
-        }
+    /* =========================
+       3️⃣ MAP DETAIL CŨ THEO ID
+       ========================= */
+        Map<Long, OrderDetail> oldDetailMap = order.getDetails().stream()
+                .filter(d -> d.getId() != null)
+                .collect(Collectors.toMap(OrderDetail::getId, d -> d));
 
-        Set<OrderDetail> details = new HashSet<>();
-        Double subtotal = 0d;
-        Set<Long> ids = new HashSet<>();
+        Set<OrderDetail> newDetails = new HashSet<>();
+        double subtotal = 0d;
 
+    /* =========================
+       4️⃣ HANDLE UPDATE / CREATE
+       ========================= */
+        for (OrderDetailUpdateReq dReq : req.getOrderDetailReqs()) {
 
-        for (var orderDetailReq:req.getOrderDetailReqs()){
+            OrderDetail detail;
+            double oldQty = 0;
 
-            Product product =null;
-            if(orderDetailReq.getProductId()!=null){
-                product = productRepository.findById(orderDetailReq.getProductId()).orElseThrow(()-> APIException.builder()
-                        .status(ErrorCode.NOT_FOUND.getStatus())
-                        .message("Cannot Found Product With Id = "+orderDetailReq.getProductId())
-                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                        .build());
+            /* ===== UPDATE DÒNG CŨ ===== */
+            if (dReq.getId() != null && oldDetailMap.containsKey(dReq.getId())) {
+                detail = oldDetailMap.get(dReq.getId());
+                oldQty = detail.getTotalQuantity();
+            }
+            /* ===== TẠO DÒNG MỚI ===== */
+            else {
+                detail = new OrderDetail();
+                detail.setOrder(order);
             }
 
-            OrderDetail orderDetail = null;
-
-            if (orderDetailReq.getId()!=null){
-                orderDetail = orderDetailRepository.findById(orderDetailReq.getId()).orElseThrow(()-> APIException.builder()
-                        .status(ErrorCode.NOT_FOUND.getStatus())
-                        .message("Cannot Found Order Detail With Id = "+orderDetailReq.getId())
-                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                        .build());
-
+            /* ===== MAP FIELD CƠ BẢN ===== */
+            detail.setName(dReq.getName());
+            detail.setPrice(dReq.getPrice());
+            detail.setQuantity(dReq.getQuantity());
+            detail.setLength(dReq.getLength());
+            detail.setBaseUnit(dReq.getBaseUnit());
+            detail.setLineIndex(dReq.getLineIndex());
+            /* ===== PRODUCT VARIANT ===== */
+            ProductVariant variant = null;
+            if (dReq.getProductVariantId() != null) {
+                variant = productVariantRepository.findById(dReq.getProductVariantId())
+                        .orElseThrow(() -> APIException.builder()
+                                .status(ErrorCode.NOT_FOUND.getStatus())
+                                .message("Cannot Found Product Variant With Id = " + dReq.getProductVariantId())
+                                .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
+                                .build());
             }
-            else{
-                orderDetail = orderMapper.toOrderDetail(orderDetailReq);
-                orderDetail.setOrder(order);
-//                orderDetail.setProduct(product);
-                orderDetail.setBaseUnit(product==null?orderDetailReq.getBaseUnit():product.getBaseUnit());
-                orderDetail.setPrice(orderDetailReq.getPrice());
+            detail.setProductVariant(variant);
 
-                if (product!=null){
-//                    Inventory inventory = product.getInventory();
-//                    inventory.exportInventory(orderDetail.getTotalQuantity());
-//
-//                    inventoryRepository.save(inventory);
+            /* ===== TÍNH CHÊNH LỆCH SỐ LƯỢNG ===== */
+            double newQty = detail.getTotalQuantity();
+            double deltaQty = newQty - oldQty;
+
+            /* ===== XỬ LÝ TỒN KHO ===== */
+            if (variant != null && dReq.getInventoryId() != null && deltaQty != 0) {
+
+                Inventory inv = inventoryRepository.findById(dReq.getInventoryId())
+                        .orElseThrow(() -> APIException.builder()
+                                .status(ErrorCode.NOT_FOUND.getStatus())
+                                .message("Cannot Found Inventory With Id = " + dReq.getInventoryId())
+                                .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
+                                .build());
+
+                if (deltaQty > 0) {
+                    if (inv.getTotalQty() > deltaQty) {
+                        inv.subQuantity(deltaQty);
+                    }
+
+                } else {
+                    inv.addQuantity(-deltaQty);
                 }
 
+                inventoryRepository.save(inv);
+                detail.setInventoryId(inv.getId());
             }
-            details.add(orderDetail);
-            persistentDetails.add(orderDetail);
-            ids.add(orderDetail.getId());
-            subtotal+=orderDetail.getSubtotal();
 
-
-
+            newDetails.add(detail);
+            subtotal += detail.getSubtotal();
         }
 
-        Iterator<OrderDetail> it = persistentDetails.iterator();
-        while (it.hasNext()) {
-            OrderDetail existingDetail = it.next();
-            if (existingDetail.getId() != null && !ids.contains(existingDetail.getId())) {
-//                if (existingDetail.getProduct() != null) {
-////                    Inventory inventory = existingDetail.getProduct().getInventory();
-////                    inventory.importInventory(existingDetail.getTotalQuantity());
-////                    inventoryRepository.save(inventory);
-//                }
-                it.remove();
+    /* =========================
+       5️⃣ HANDLE DELETE DETAIL
+       ========================= */
+        for (OrderDetail old : order.getDetails()) {
+            if (old.getId() != null &&
+                    newDetails.stream().noneMatch(d -> Objects.equals(d.getId(), old.getId()))
+            ) {
+                if (old.getProductVariant() != null && old.getInventoryId() != null) {
+                    inventoryRepository.findById(old.getInventoryId())
+                            .ifPresent(inv -> {
+                                inv.addQuantity(old.getTotalQuantity());
+                                inventoryRepository.save(inv);
+                            });
+                }
             }
         }
 
+    /* =========================
+       6️⃣ APPLY DETAIL SET
+       ========================= */
+        order.getDetails().clear();
+        order.getDetails().addAll(newDetails);
+
+    /* =========================
+       7️⃣ UPDATE ORDER INFO
+       ========================= */
         order.setSubtotal(subtotal);
         order.setAmount();
         order.setCustomer(customer);
-        order.setCreatedAt(req.getCreatedAt()==null? LocalDateTime.now():LocalDateTime.ofInstant(Instant.parse(req.getCreatedAt()), ZoneId.systemDefault()));
 
-
-
-
-
-
-        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
-                ResponseObject.builder()
-                        .status(SuccessCode.REQUEST.getStatus())
-                        .message("Update Order Successfully")
-                        .data(orderMapper.toOrderRes(orderRepository.save(order)))
-                        .build()
+        order.setCreatedAt(
+                req.getCreatedAt() == null
+                        ? LocalDateTime.now()
+                        : LocalDateTime.ofInstant(
+                        Instant.parse(req.getCreatedAt()),
+                        ZoneId.systemDefault()
+                )
         );
 
+        Order saved = orderRepository.save(order);
+
+    /* =========================
+       8️⃣ RESPONSE
+       ========================= */
+        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode())
+                .body(ResponseObject.builder()
+                        .status(SuccessCode.REQUEST.getStatus())
+                        .message("Update Order Successfully")
+                        .data(orderMapper.toOrderRes(saved))
+                        .build());
     }
+
 
     @Transactional
     public ResponseEntity<ResponseObject> deleteOrder(String id){
         Optional<Order> order = orderRepository.findById(id);
         if (order.isPresent()){
             for (var orderDetail:order.get().getDetails()){
-//                if (orderDetail.getProduct()!=null){
-////                    Inventory inventory = orderDetail.getProduct().getInventory();
-////                    inventory.importInventory(orderDetail.getTotalQuantity());
-////                    inventoryRepository.save(inventory);
-//                }
+                if (orderDetail.getProductVariant()!=null){
+                    Optional<Inventory> inventory = inventoryRepository.findById(orderDetail.getInventoryId());
+                    if (inventory.isPresent()){
+                        inventory.get().addQuantity(orderDetail.getTotalQuantity());
+                        inventoryRepository.save(inventory.get());
+                    }
+                }
             }
             orderRepository.deleteById(id);
 
@@ -289,12 +352,13 @@ public class OrderService {
                 .message("Cannot Found Customer With Id = "+customerId)
                 .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
                 .build());
-//        List<Order> orders = orderRepository.findByCustomer_IdAndRemainingAmountGreaterThanOrderByCreatedAtDesc(customerId,0);
+
+        List<Order> orders = orderRepository.findByCustomer_IdAndRemainingAmountGreaterThanOrderByCreatedAtDesc(customerId,0);
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
                         .status(SuccessCode.REQUEST.getStatus())
                         .message("Danh sách hóa đơn còn công nợ")
-                        .data(null)
+                        .data(orders)
                         .build()
         );
     }

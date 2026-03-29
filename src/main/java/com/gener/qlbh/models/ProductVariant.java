@@ -29,15 +29,11 @@ public class ProductVariant {
     @JsonBackReference
     private Product product;
 
-
-
     private Double weight;
 
     private Double retailPrice;
 
     private Double storePrice;
-
-    private Double costPrice;
 
     @Builder.Default
     private boolean status=true;
@@ -57,5 +53,10 @@ public class ProductVariant {
         if (inv == null) return;
         inventories.remove(inv);
         inv.setVariant(null);
+    }
+
+
+    public boolean getBusinessStatus(){
+        return this.status && this.product.isStatus();
     }
 }

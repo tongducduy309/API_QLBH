@@ -47,7 +47,6 @@ public class ProductVariantService {
                 .weight(req.getWeight())
                 .retailPrice(req.getRetailPrice())
                 .storePrice(req.getStorePrice())
-                .costPrice(req.getCostPrice())
                 .status(req.getStatus() == null || req.getStatus())
                 .build();
 

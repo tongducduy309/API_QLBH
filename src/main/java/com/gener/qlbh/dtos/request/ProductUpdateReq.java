@@ -19,5 +19,6 @@ public class ProductUpdateReq {
     private String baseUnit;
     @NotNull
     private Long categoryId;
+    private Double warningQuantity;
     private List<ProductVariantUpdateReq> variants;
 }

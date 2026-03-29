@@ -19,13 +19,18 @@ public class InventoryController {
     private final InventoryService inventoryService;
 
     @GetMapping
-    ResponseEntity<ResponseObject> getAllInventory(){
-        return inventoryService.getAllInventory();
+    ResponseEntity<ResponseObject> getAllInventory(@RequestParam boolean status){
+        return inventoryService.getAllInventory(status);
     }
 
     @PostMapping("/available")
     ResponseEntity<ResponseObject> checkInventory(@RequestBody OrderReq orderReq) throws APIException {
         return inventoryService.checkInventory(orderReq);
+    }
+
+    @DeleteMapping("/{id}")
+    ResponseEntity<ResponseObject> deleteInventory(@PathVariable Long id){
+        return inventoryService.deleteInventory(id);
     }
 
 }
