@@ -46,8 +46,9 @@ public class ProductVariantService {
                 .variantCode(req.getVariantCode())
                 .weight(req.getWeight())
                 .retailPrice(req.getRetailPrice())
+                .sku(req.getSku())
                 .storePrice(req.getStorePrice())
-                .status(req.getStatus() == null || req.getStatus())
+                .active(req.getActive() == null || req.getActive())
                 .build();
 
         variant.setProduct(product);

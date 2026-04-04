@@ -8,7 +8,7 @@ import lombok.*;
 @Getter
 @Setter
 @Builder
-public class OrderDetailReq {
+public class OrderDetailCreateReq {
     @NotNull
     private String name;
     private Long productVariantId;

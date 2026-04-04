@@ -1,8 +1,8 @@
 package com.gener.qlbh.controllers;
 
 import com.gener.qlbh.dtos.request.AuthTokenReq;
-import com.gener.qlbh.dtos.request.AuthenticationReq;
 import com.gener.qlbh.dtos.request.IntrospectReq;
+import com.gener.qlbh.dtos.request.LoginReq;
 import com.gener.qlbh.exception.APIException;
 import com.gener.qlbh.models.ResponseObject;
 import com.gener.qlbh.services.AuthencationService;
@@ -19,9 +19,9 @@ import java.text.ParseException;
 public class AuthenticationController {
     private final AuthencationService authencationService;
 
-    @PostMapping("/authenticate")
-    ResponseEntity<ResponseObject> authenticate(@RequestBody AuthenticationReq authenticationRequest) throws APIException {
-        return authencationService.authenticate(authenticationRequest);
+    @PostMapping("/login")
+    ResponseEntity<ResponseObject> login(@RequestBody LoginReq loginReq) throws APIException {
+        return authencationService.login(loginReq);
     }
     @PostMapping("/introspect")
     ResponseEntity<ResponseObject> introspect(@RequestBody IntrospectReq introspectRequest) throws ParseException, JOSEException {

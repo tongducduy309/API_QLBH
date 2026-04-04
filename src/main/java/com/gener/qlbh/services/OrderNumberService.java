@@ -38,4 +38,12 @@ public class OrderNumberService {
         String six = String.format("%06d", val);
         return period + "-" + six;
     }
+
+    @Transactional
+    public String getNextOrderCode(){
+        String period = LocalDate.now().format(PERIOD_FMT);
+        Long val = repo.findNextVal(period);
+        String six = String.format("%06d", val);
+        return period + "-" + six;
+    }
 }

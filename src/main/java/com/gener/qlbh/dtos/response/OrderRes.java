@@ -14,7 +14,8 @@ import java.util.Set;
 @Setter
 @Getter
 public class OrderRes {
-    private String id;
+    private Long id;
+    private String code;
     private OrderCustomerRes customer;
     private Double tax;
     private Double taxAmount;
@@ -30,6 +31,6 @@ public class OrderRes {
     private Double total;
     private Set<OrderDetailRes> details;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime createdAt;
 }

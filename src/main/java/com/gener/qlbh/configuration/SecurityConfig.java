@@ -46,7 +46,8 @@ public class SecurityConfig {
                 request.requestMatchers(HttpMethod.POST,PUBLIC_ENDPOINT_POST).permitAll()
                         .requestMatchers(HttpMethod.GET,PUBLIC_ENDPOINT_GET).permitAll()
 //                        .requestMatchers(HttpMethod.GET,"/api/v1/users").hasRole(Role.ADMIN.name())
-                .anyRequest().authenticated());
+                .anyRequest().authenticated()
+                );
 
         httpSecurity.oauth2ResourceServer(oauth2->
                 oauth2.jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder())

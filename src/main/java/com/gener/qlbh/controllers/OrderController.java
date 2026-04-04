@@ -4,7 +4,6 @@ import com.gener.qlbh.dtos.request.*;
 import com.gener.qlbh.exception.APIException;
 import com.gener.qlbh.models.ResponseObject;
 import com.gener.qlbh.services.OrderService;
-import com.gener.qlbh.services.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,22 +20,22 @@ public class OrderController {
     }
 
     @PostMapping
-    ResponseEntity<ResponseObject> createOrder(@RequestBody OrderReq req) throws APIException {
+    ResponseEntity<ResponseObject> createOrder(@RequestBody OrderCreateReq req) throws APIException {
         return orderService.createOrder(req);
     }
 
     @PutMapping("/{id}")
-    ResponseEntity<ResponseObject> updateOrder(@PathVariable String id, @RequestBody OrderUpdateReq req) throws APIException {
+    ResponseEntity<ResponseObject> updateOrder(@PathVariable Long id, @RequestBody OrderUpdateReq req) throws APIException {
         return orderService.updateOrder(id, req);
     }
 
     @GetMapping("/{id}")
-    ResponseEntity<ResponseObject> getOrderById(@PathVariable String id) throws APIException {
+    ResponseEntity<ResponseObject> getOrderById(@PathVariable Long id) throws APIException {
         return orderService.getOrderById(id);
     }
 
     @DeleteMapping("/{id}")
-    ResponseEntity<ResponseObject> deleteOrder(@PathVariable String id){
+    ResponseEntity<ResponseObject> deleteOrder(@PathVariable Long id){
         return orderService.deleteOrder(id);
     }
 
@@ -48,5 +47,10 @@ public class OrderController {
     @GetMapping("/customer/{customerId}")
     ResponseEntity<ResponseObject> getDeptOrderByCustomerId(@PathVariable Long customerId) throws APIException{
         return orderService.getDeptOrderByCustomerId(customerId);
+    }
+
+    @GetMapping("/next-code")
+    ResponseEntity<ResponseObject> getNextOrderCode(){
+        return orderService.getNextOrderCode();
     }
 }

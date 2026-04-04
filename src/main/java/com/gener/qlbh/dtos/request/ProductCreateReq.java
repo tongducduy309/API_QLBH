@@ -1,14 +1,9 @@
 package com.gener.qlbh.dtos.request;
 
-import com.gener.qlbh.models.Category;
-import com.gener.qlbh.models.Inventory;
-import com.gener.qlbh.models.ProductVariant;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.util.List;
-import java.util.Set;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,11 +14,12 @@ public class ProductCreateReq {
     @NotNull
     private String name;
     @NotNull
-    private boolean status;
+    private boolean active;
     private String baseUnit;
     @NotNull
-    private Long categoryId;
+    private String categoryName;
     private Double warningQuantity;
+    private String description;
 
     private List<ProductVariantCreateReq> variants;
 }

@@ -19,4 +19,5 @@ public class OrderDetailRes {
     private String name;
     private Long productVariantId;
     private String baseUnit;
+    private Long inventoryId;
 }

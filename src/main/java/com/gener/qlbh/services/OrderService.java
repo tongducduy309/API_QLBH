@@ -1,7 +1,6 @@
 package com.gener.qlbh.services;
 
 import com.gener.qlbh.dtos.request.*;
-import com.gener.qlbh.dtos.response.CustomerDetailRes;
 import com.gener.qlbh.enums.ErrorCode;
 import com.gener.qlbh.enums.SuccessCode;
 import com.gener.qlbh.exception.APIException;
@@ -12,7 +11,6 @@ import com.gener.qlbh.repositories.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -47,7 +45,7 @@ public class OrderService {
     }
 
     @Transactional
-    public ResponseEntity<ResponseObject> getOrderById(String id) throws APIException {
+    public ResponseEntity<ResponseObject> getOrderById(Long id) throws APIException {
         Order order = orderRepository.findById(id).orElseThrow(()-> APIException.builder()
                 .status(ErrorCode.NOT_FOUND.getStatus())
                 .message("Cannot Found Order With Id = "+id)
@@ -65,7 +63,7 @@ public class OrderService {
     }
 
     @Transactional
-    public ResponseEntity<ResponseObject> createOrder(OrderReq req) throws APIException {
+    public ResponseEntity<ResponseObject> createOrder(OrderCreateReq req) throws APIException {
         Customer customer = null;
         if (req.getCustomerId()!=null){
             customer = customerRepository.findById(req.getCustomerId()).orElseThrow(()-> APIException.builder()
@@ -79,7 +77,7 @@ public class OrderService {
         Set<OrderDetail> details = new HashSet<>();
         Double subtotal = 0d;
 
-        for (var orderDetailReq:req.getOrderDetailReqs()){
+        for (var orderDetailReq:req.getOrderDetailCreateReqs()){
             ProductVariant productVariant =null;
             if(orderDetailReq.getProductVariantId()!=null){
                 productVariant = productVariantRepository.findById(orderDetailReq.getProductVariantId()).orElseThrow(()-> APIException.builder()
@@ -98,11 +96,11 @@ public class OrderService {
             orderDetail.setPrice(orderDetailReq.getPrice());
             orderDetail.setLineIndex(orderDetailReq.getLineIndex());
             if (productVariant!=null){
-                Optional<Inventory> inventory = inventoryRepository.findById(orderDetailReq.getInventoryId());
+                Optional<InventoryLot> inventory = inventoryRepository.findById(orderDetailReq.getInventoryId());
                 if (inventory.isPresent()){
-                    inventory.get().subQuantity(orderDetail.getTotalQuantity());
+                    inventory.get().deduct(orderDetail.getTotalQuantity());
                     inventoryRepository.save(inventory.get());
-                    orderDetail.setInventoryId(inventory.get().getId());
+                    orderDetail.setInventory(inventory.get());
                 }
 
             }
@@ -119,12 +117,10 @@ public class OrderService {
         order.setCustomer(customer);
         order.setCreatedAt(req.getCreatedAt()==null? LocalDateTime.now():LocalDateTime.ofInstant(Instant.parse(req.getCreatedAt()), ZoneId.systemDefault()));
 
-        String id = orderNumberService.nextOrderCode();
-//        log.info(id);
-        order.setId(id);
+        String code = orderNumberService.nextOrderCode();
+        order.setCode(code);
+
         orderRepository.save(order);
-
-
 
         return ResponseEntity.status(SuccessCode.CREATE.getHttpStatusCode()).body(
                 ResponseObject.builder()
@@ -137,7 +133,18 @@ public class OrderService {
     }
 
     @Transactional
-    public ResponseEntity<ResponseObject> updateOrder(String id, OrderUpdateReq req) throws APIException {
+    public ResponseEntity<ResponseObject> getNextOrderCode(){
+        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
+                ResponseObject.builder()
+                        .status(SuccessCode.REQUEST.getStatus())
+                        .message("Get Next Order Code")
+                        .data(orderNumberService.getNextOrderCode())
+                        .build()
+        );
+    }
+
+    @Transactional
+    public ResponseEntity<ResponseObject> updateOrder(Long id, OrderUpdateReq req) throws APIException {
 
     /* =========================
        1️⃣ LOAD ORDER
@@ -217,7 +224,7 @@ public class OrderService {
             /* ===== XỬ LÝ TỒN KHO ===== */
             if (variant != null && dReq.getInventoryId() != null && deltaQty != 0) {
 
-                Inventory inv = inventoryRepository.findById(dReq.getInventoryId())
+                InventoryLot inv = inventoryRepository.findById(dReq.getInventoryId())
                         .orElseThrow(() -> APIException.builder()
                                 .status(ErrorCode.NOT_FOUND.getStatus())
                                 .message("Cannot Found Inventory With Id = " + dReq.getInventoryId())
@@ -225,16 +232,16 @@ public class OrderService {
                                 .build());
 
                 if (deltaQty > 0) {
-                    if (inv.getTotalQty() > deltaQty) {
-                        inv.subQuantity(deltaQty);
+                    if (inv.getRemainingQty() > deltaQty) {
+//                        inv.subQuantity(deltaQty);
                     }
 
                 } else {
-                    inv.addQuantity(-deltaQty);
+//                    inv.addQuantity(-deltaQty);
                 }
 
                 inventoryRepository.save(inv);
-                detail.setInventoryId(inv.getId());
+                detail.setInventory(inv);
             }
 
             newDetails.add(detail);
@@ -248,10 +255,10 @@ public class OrderService {
             if (old.getId() != null &&
                     newDetails.stream().noneMatch(d -> Objects.equals(d.getId(), old.getId()))
             ) {
-                if (old.getProductVariant() != null && old.getInventoryId() != null) {
-                    inventoryRepository.findById(old.getInventoryId())
+                if (old.getProductVariant() != null && old.getInventory() != null) {
+                    inventoryRepository.findById(old.getInventory().getId())
                             .ifPresent(inv -> {
-                                inv.addQuantity(old.getTotalQuantity());
+//                                inv.addQuantity(old.getTotalQuantity());
                                 inventoryRepository.save(inv);
                             });
                 }
@@ -295,14 +302,14 @@ public class OrderService {
 
 
     @Transactional
-    public ResponseEntity<ResponseObject> deleteOrder(String id){
+    public ResponseEntity<ResponseObject> deleteOrder(Long id){
         Optional<Order> order = orderRepository.findById(id);
         if (order.isPresent()){
             for (var orderDetail:order.get().getDetails()){
                 if (orderDetail.getProductVariant()!=null){
-                    Optional<Inventory> inventory = inventoryRepository.findById(orderDetail.getInventoryId());
+                    Optional<InventoryLot> inventory = inventoryRepository.findById(orderDetail.getInventory().getId());
                     if (inventory.isPresent()){
-                        inventory.get().addQuantity(orderDetail.getTotalQuantity());
+//                        inventory.get().addQuantity(orderDetail.getTotalQuantity());
                         inventoryRepository.save(inventory.get());
                     }
                 }

@@ -2,19 +2,13 @@ package com.gener.qlbh.mapper;
 
 
 
-import com.gener.qlbh.dtos.request.OrderDetailReq;
+import com.gener.qlbh.dtos.request.OrderCreateReq;
+import com.gener.qlbh.dtos.request.OrderDetailCreateReq;
 import com.gener.qlbh.dtos.request.OrderDetailUpdateReq;
-import com.gener.qlbh.dtos.request.OrderReq;
 import com.gener.qlbh.dtos.response.OrderDetailRes;
 import com.gener.qlbh.dtos.response.OrderRes;
-import com.gener.qlbh.models.Customer;
 import com.gener.qlbh.models.Order;
 import com.gener.qlbh.models.OrderDetail;
-import com.gener.qlbh.models.Product;
-import com.gener.qlbh.repositories.CustomerRepository;
-import com.gener.qlbh.repositories.ProductRepository;
-import lombok.Builder;
-import lombok.RequiredArgsConstructor;
 import org.mapstruct.*;
 
 import java.util.Collections;
@@ -37,7 +31,7 @@ public interface OrderMapper {
     @Mapping(target = "nameCustomer",    source = "nameCustomer")
     @Mapping(target = "phoneCustomer",    source = "phoneCustomer")
     @Mapping(target = "addressCustomer",    source = "addressCustomer")
-    Order toOrder(OrderReq req);
+    Order toOrder(OrderCreateReq req);
 
 
 
@@ -49,9 +43,9 @@ public interface OrderMapper {
     @Mapping(target = "price",source = "price")
     @Mapping(target = "name",source = "name")
     @Mapping(target = "baseUnit",source = "baseUnit")
-    @Mapping(target = "inventoryId",source = "inventoryId")
+    @Mapping(target = "inventory",ignore = true)
     @Mapping(target = "lineIndex",source = "lineIndex")
-    OrderDetail toOrderDetail(OrderDetailReq req);
+    OrderDetail toOrderDetail(OrderDetailCreateReq req);
 
     @Mapping(target = "id",      source = "id")
     @Mapping(target = "order",   ignore = true)
@@ -61,10 +55,10 @@ public interface OrderMapper {
     @Mapping(target = "price",source = "price")
     @Mapping(target = "name",source = "name")
     @Mapping(target = "baseUnit",source = "baseUnit")
-    @Mapping(target = "inventoryId",source = "inventoryId")
+    @Mapping(target = "inventory", ignore = true)
     OrderDetail toOrderDetail(OrderDetailUpdateReq req);
 
-    Set<OrderDetail> toEntityDetails_Create(List<OrderDetailReq> reqs);
+    Set<OrderDetail> toEntityDetails_Create(List<OrderDetailCreateReq> reqs);
 
     Set<OrderDetail> toEntityDetails_Update(List<OrderDetailUpdateReq> reqs);
 
@@ -82,12 +76,13 @@ public interface OrderMapper {
     @Mapping(target = "length",      source = "length")
     @Mapping(target = "quantity",    source = "quantity")
     @Mapping(target = "price",        source = "price")
-//    @Mapping(target = "sku",         source = "product.variants.sku")
+    @Mapping(target = "sku",         source = "productVariant.sku")
     @Mapping(target = "name",        source = "name")
     @Mapping(target = "productVariantId",   source = "productVariant.id")
     @Mapping(target = "baseUnit",    source = "baseUnit")
     @Mapping(target = "subtotal",    source = "subtotal")
     @Mapping(target = "totalQuantity",    source = "totalQuantity")
+    @Mapping(target = "inventoryId",    source = "inventory.id")
     OrderDetailRes toOrderDetailRes(OrderDetail orderDetail);
 
     @Mapping(target = "total",    source = "total")

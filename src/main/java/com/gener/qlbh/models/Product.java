@@ -32,20 +32,23 @@ public class Product {
     private String name;
 
     @Builder.Default
-    private boolean status=true;
-
-    @Builder.Default
-    private boolean wishlist=false;
+    private boolean active=true;
 
     private String baseUnit;
+
+    private String categoryName;
+
+    @Column(length = 250)
+    private String description;
+
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductVariant> variants = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
-//    @JsonBackReference
-    private Category category;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "category_id", nullable = false)
+////    @JsonBackReference
+//    private Category category;
 
     private Double warningQuantity;
 

@@ -55,18 +55,20 @@ public class PurchaseReceiptsService {
 
         purchaseReceipts.setVariant(productVariant);
 
-        Inventory inventory = new Inventory();
-        inventory = inventoryRepository.findByVariantId(req.getProductVariantId());
-        if (method.equals(PurchaseReceiptMethod.ADDITIONAL)&&inventory!=null){
-            inventory.addQuantity(req.getTotalQuantity());
+        InventoryLot inventoryLot = new InventoryLot();
+        inventoryLot = inventoryRepository.findByVariantId(req.getProductVariantId());
+        if (method.equals(PurchaseReceiptMethod.ADDITIONAL)&& inventoryLot !=null){
+//            inventoryLot.addQuantity(req.getTotalQuantity());
         }else{
-            inventory = Inventory.builder()
+            inventoryLot = InventoryLot.builder()
                     .variant(productVariant)
-                    .totalQty(req.getTotalQuantity())
+                    .originalQty(req.getTotalQuantity())
+                    .remainingQty(req.getTotalQuantity())
+//                    .totalQty(req.getTotalQuantity())
                     .build();
         }
-        inventory.setCost(req.getCost());
-        inventoryRepository.save(inventory);
+        inventoryLot.setCostPrice(req.getCost());
+        inventoryRepository.save(inventoryLot);
 
         return ResponseEntity.status(SuccessCode.CREATE.getHttpStatusCode()).body(
                 ResponseObject.builder()
@@ -106,7 +108,7 @@ public class PurchaseReceiptsService {
                     .build();
         }
 
-        Inventory inv = inventoryRepository.findById(receipt.getInventoryId())
+        InventoryLot inv = inventoryRepository.findById(receipt.getInventoryId())
                 .orElseThrow(() -> APIException.builder()
                         .status(ErrorCode.NOT_FOUND.getStatus())
                         .message("Cannot Found Inventory With Id = " + receipt.getInventoryId())
@@ -114,7 +116,7 @@ public class PurchaseReceiptsService {
                         .build());
 
         // Check không cho âm kho
-        if (inv.getTotalQty() < qty) {
+        if (inv.getRemainingQty() < qty) {
             throw APIException.builder()
                     .status(ErrorCode.BAD_REQUEST.getStatus())
                     .message("Cannot delete receipt because current stock is smaller than receipt quantity")
@@ -122,7 +124,8 @@ public class PurchaseReceiptsService {
                     .build();
         }
 
-        inv.subQuantity(qty);
+//        inv.subQuantity(qty);
+//        inv.setOriginalQty(qty);
         inventoryRepository.save(inv);
 
         purchaseReceiptsRepository.delete(receipt);

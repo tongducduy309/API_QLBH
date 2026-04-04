@@ -1,7 +1,7 @@
 package com.gener.qlbh.services;
 
-import com.gener.qlbh.dtos.request.AuthenticationReq;
 import com.gener.qlbh.dtos.request.IntrospectReq;
+import com.gener.qlbh.dtos.request.LoginReq;
 import com.gener.qlbh.dtos.response.AuthProfileRes;
 import com.gener.qlbh.dtos.response.AuthenticationRes;
 import com.gener.qlbh.enums.ErrorCode;
@@ -70,12 +70,11 @@ public class AuthencationService {
     }
 
     @Transactional
-    public ResponseEntity<ResponseObject> authenticate(AuthenticationReq authenticationRequest) throws APIException {
-        logger.info(authenticationRequest.getUsername());
-        User user = userRepository.findByUsername(authenticationRequest.getUsername()).orElseThrow(()->new APIException(ErrorCode.USERNAME_NOT_EXISTS));
+    public ResponseEntity<ResponseObject> login(LoginReq loginReq) throws APIException {
+        User user = userRepository.findByUsername(loginReq.getUsername()).orElseThrow(()->new APIException(ErrorCode.USERNAME_NOT_EXISTS));
 
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
-        if (!passwordEncoder.matches(authenticationRequest.getPassword(),user.getPassword())) throw new APIException(ErrorCode.WRONG_PASSWORD);
+        if (!passwordEncoder.matches(loginReq.getPassword(),user.getPassword())) throw new APIException(ErrorCode.WRONG_PASSWORD);
 
         String token = generateToken(user);
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(

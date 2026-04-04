@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 
-public interface OrderRepository extends JpaRepository<Order,String> {
+public interface OrderRepository extends JpaRepository<Order,Long> {
     List<Order> findByCreatedAtBetween(LocalDateTime startOfDay, LocalDateTime endOfDay);
 
     List<Order> findByCustomer_IdAndRemainingAmountGreaterThanOrderByCreatedAtDesc(
@@ -67,13 +67,13 @@ public interface OrderRepository extends JpaRepository<Order,String> {
                         END
                     )
                     *
-                    COALESCE(inv.cost,0)
+                    COALESCE(inv.costPrice,0)
                 )
 
             ), 0)
              FROM Order o3
              JOIN o3.details d
-             LEFT JOIN Inventory inv ON inv.id = d.inventoryId
+             LEFT JOIN InventoryLot inv ON inv.id = d.inventory.id
              WHERE o3.createdAt BETWEEN :start AND :end),
 
             /* ===== ĐÃ THU ===== */

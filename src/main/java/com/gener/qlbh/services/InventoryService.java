@@ -1,14 +1,14 @@
 package com.gener.qlbh.services;
 
-import com.gener.qlbh.dtos.request.OrderDetailReq;
-import com.gener.qlbh.dtos.request.OrderReq;
+import com.gener.qlbh.dtos.request.OrderDetailCreateReq;
+import com.gener.qlbh.dtos.request.OrderCreateReq;
 import com.gener.qlbh.enums.ErrorCode;
 import com.gener.qlbh.enums.SuccessCode;
 import com.gener.qlbh.exception.APIException;
 import com.gener.qlbh.mapper.InventoryMapper;
 import com.gener.qlbh.mapper.OrderMapper;
+import com.gener.qlbh.mapper.ProductMapper;
 import com.gener.qlbh.models.*;
-import com.gener.qlbh.repositories.CategoryRepository;
 import com.gener.qlbh.repositories.InventoryRepository;
 import com.gener.qlbh.repositories.ProductRepository;
 import jakarta.transaction.Transactional;
@@ -27,30 +27,31 @@ public class InventoryService {
     private final InventoryMapper inventoryMapper;
     private final ProductRepository productRepository;
     private final OrderMapper orderMapper;
+    private final ProductMapper productMapper;
 
     public ResponseEntity<ResponseObject> getAllInventory(boolean status){
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
                         .status(SuccessCode.REQUEST.getStatus())
                         .message("Get All Inventory Successfully")
-                        .data(inventoryMapper.toInventoryRes(inventoryRepository.findAllActiveVariantAndProduct(status)))
+                        .data(productMapper.toProductInventoryRes(productRepository.findAllWithVariantsAndInventories(status)))
                         .build()
         );
 
     }
 
     @Transactional
-    public ResponseEntity<ResponseObject> checkInventory(OrderReq orderReq) throws APIException {
+    public ResponseEntity<ResponseObject> checkInventory(OrderCreateReq orderCreateReq) throws APIException {
         List<String> list = new ArrayList<>();
-        for (OrderDetailReq orderDetailReq:orderReq.getOrderDetailReqs()){
+        for (OrderDetailCreateReq orderDetailCreateReq : orderCreateReq.getOrderDetailCreateReqs()){
 
-            if(orderDetailReq.getProductVariantId()!=null){
-                Product product = productRepository.findById(orderDetailReq.getProductVariantId()).orElseThrow(()-> APIException.builder()
+            if(orderDetailCreateReq.getProductVariantId()!=null){
+                Product product = productRepository.findById(orderDetailCreateReq.getProductVariantId()).orElseThrow(()-> APIException.builder()
                         .status(ErrorCode.NOT_FOUND.getStatus())
-                        .message("Cannot Found Product With Id = "+orderDetailReq.getProductVariantId())
+                        .message("Cannot Found Product With Id = "+ orderDetailCreateReq.getProductVariantId())
                         .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
                         .build());
-                OrderDetail orderDetail = orderMapper.toOrderDetail(orderDetailReq);
+                OrderDetail orderDetail = orderMapper.toOrderDetail(orderDetailCreateReq);
                 Double totalLength = orderDetail.getTotalQuantity();
 //                Inventory inventory = product.getInventory();
 //                if((totalLength!=null&&totalLength>inventory.getTotalBaseUnitQty())||(totalLength==null&&orderDetail.getQuantity()>inventory.getTotalBaseUnitQty())){
@@ -74,7 +75,7 @@ public class InventoryService {
 
     @Transactional
     public ResponseEntity<ResponseObject> deleteInventory(Long id){
-        Optional<Inventory> inventory = inventoryRepository.findById(id);
+        Optional<InventoryLot> inventory = inventoryRepository.findById(id);
         if (inventory.isPresent()){
 
             inventoryRepository.deleteById(id);

@@ -2,7 +2,6 @@ package com.gener.qlbh.dtos.request;
 
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @NoArgsConstructor
@@ -10,7 +9,7 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
-public class OrderReq {
+public class OrderCreateReq {
     private Long customerId;
     private String nameCustomer;
     private String phoneCustomer;
@@ -19,6 +18,6 @@ public class OrderReq {
     private Double paidAmount;
     private Double shippingFee;
     private Double tax;
-    private List<OrderDetailReq> orderDetailReqs;
+    private List<OrderDetailCreateReq> orderDetailCreateReqs;
     private String createdAt;
 }

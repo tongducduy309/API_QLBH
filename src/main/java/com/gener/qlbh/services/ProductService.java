@@ -63,11 +63,11 @@ public class ProductService {
 
     @Transactional
     public ResponseEntity<ResponseObject> createProduct(ProductCreateReq req) throws APIException {
-        Category category = categoryRepository.findById(req.getCategoryId()).orElseThrow(()-> APIException.builder()
-                .status(ErrorCode.NOT_FOUND.getStatus())
-                .message("Cannot Found Category With Id = "+req.getCategoryId())
-                .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                .build());
+//        Category category = categoryRepository.findById(req.getCategoryId()).orElseThrow(()-> APIException.builder()
+//                .status(ErrorCode.NOT_FOUND.getStatus())
+//                .message("Cannot Found Category With Id = "+req.getCategoryId())
+//                .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
+//                .build());
 
 
 //        Inventory inventory = Inventory.builder()
@@ -83,7 +83,8 @@ public class ProductService {
         }
 
 
-        product.setCategory(category);
+//        product.setCategory(category);
+        product.setCategoryName(req.getCategoryName());
 //        product.setInventory(inventory);
         return ResponseEntity.status(SuccessCode.CREATE.getHttpStatusCode()).body(
                 ResponseObject.builder()
@@ -118,18 +119,20 @@ public class ProductService {
                         .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
                         .build());
 
-        Category category = categoryRepository.findById(req.getCategoryId())
-                .orElseThrow(() -> APIException.builder()
-                        .status(ErrorCode.NOT_FOUND.getStatus())
-                        .message("Cannot Found Category With Id = "+req.getCategoryId())
-                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                        .build());
+//        Category category = categoryRepository.findById(req.getCategoryId())
+//                .orElseThrow(() -> APIException.builder()
+//                        .status(ErrorCode.NOT_FOUND.getStatus())
+//                        .message("Cannot Found Category With Id = "+req.getCategoryId())
+//                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
+//                        .build());
 
         product.setName(req.getName());
-        product.setStatus(req.isStatus());
+        product.setActive(req.isActive());
         product.setBaseUnit(req.getBaseUnit());
         product.setWarningQuantity(req.getWarningQuantity());
-        product.setCategory(category);
+        product.setCategoryName(req.getCategoryName());
+        product.setDescription(req.getDescription());
+//        product.setCategory(category);
 
         // Map variant hiện có theo id
         Map<Long, ProductVariant> current = product.getVariants().stream()
@@ -145,10 +148,11 @@ public class ProductService {
                     ProductVariant v = new ProductVariant();
                     v.setVariantCode(vreq.getVariantCode());
                     v.setProduct(product);
+                    v.setSku(vreq.getSku());
                     v.setWeight(vreq.getWeight());
                     v.setRetailPrice(vreq.getRetailPrice());
                     v.setStorePrice(vreq.getStorePrice());
-                    v.setStatus(vreq.getStatus());
+                    v.setActive(vreq.getActive());
                     product.getVariants().add(v);
                 } else {
                     ProductVariant v = current.get(vreq.getId());
@@ -159,9 +163,10 @@ public class ProductService {
                             .build();
                     v.setVariantCode(vreq.getVariantCode());
                     v.setWeight(vreq.getWeight());
+                    v.setSku(vreq.getSku());
                     v.setRetailPrice(vreq.getRetailPrice());
                     v.setStorePrice(vreq.getStorePrice());
-                    v.setStatus(vreq.getStatus());
+                    v.setActive(vreq.getActive());
 
                     keepIds.add(v.getId());
                 }
@@ -199,7 +204,7 @@ public class ProductService {
                 .message("Cannot Found Product With Id = "+id)
                 .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
                 .build());
-        product.setWishlist(req.isWishlist());
+//        product.setWishlist(req.isWishlist());
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 new ResponseObject(SuccessCode.REQUEST.getStatus(), "Update Wishlist Of Product Successfully",productRepository.save(product))
         );

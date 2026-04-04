@@ -8,7 +8,7 @@ import lombok.*;
 @Setter
 @Builder
 public class PaidDeptReq {
-    private String orderId;
+    private Long orderId;
     private Double paidDept;
 
 }

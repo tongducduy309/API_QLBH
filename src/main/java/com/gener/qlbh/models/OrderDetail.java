@@ -26,11 +26,15 @@ public class OrderDetail {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_variant_id")
     private ProductVariant productVariant;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "inventory_id")
+    private InventoryLot inventory;
+
     private Double price;
     private Double length;
     private Double quantity;
     private String baseUnit;
-    private Long inventoryId;
 
     @Column(name="line_index")
     private int lineIndex;

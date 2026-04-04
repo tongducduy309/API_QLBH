@@ -22,6 +22,8 @@ public class ProductVariant {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String sku;
+
     private String variantCode;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -36,20 +38,20 @@ public class ProductVariant {
     private Double storePrice;
 
     @Builder.Default
-    private boolean status=true;
+    private boolean active=true;
 
     @OneToMany(mappedBy = "variant", cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE }, orphanRemoval = true)
     @ToString.Exclude
     @JsonManagedReference
-    private List<Inventory> inventories = new ArrayList<>();
+    private List<InventoryLot> inventories = new ArrayList<>();
 
-    public void addInventory(Inventory inv) {
+    public void addInventory(InventoryLot inv) {
         if (inv == null) return;
         inventories.add(inv);
         inv.setVariant(this);
     }
 
-    public void removeInventory(Inventory inv) {
+    public void removeInventory(InventoryLot inv) {
         if (inv == null) return;
         inventories.remove(inv);
         inv.setVariant(null);
@@ -57,6 +59,6 @@ public class ProductVariant {
 
 
     public boolean getBusinessStatus(){
-        return this.status && this.product.isStatus();
+        return this.active && this.product.isActive();
     }
 }

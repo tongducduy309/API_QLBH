@@ -15,10 +15,12 @@ import java.util.List;
 public class ProductUpdateReq {
     @NotNull
     private String name;
-    private boolean status;
+    private boolean active;
     private String baseUnit;
     @NotNull
-    private Long categoryId;
+    private String categoryName;
     private Double warningQuantity;
+    private String description;
+
     private List<ProductVariantUpdateReq> variants;
 }
