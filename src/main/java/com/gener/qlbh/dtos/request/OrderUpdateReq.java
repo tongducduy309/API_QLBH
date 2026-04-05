@@ -19,6 +19,6 @@ public class OrderUpdateReq {
     private String note;
     private Double paidAmount;
     private Double shippingFee;
-    private List<OrderDetailUpdateReq> orderDetailReqs;
+    private List<OrderDetailUpdateReq> orderDetailUpdateReqs;
     private String createdAt;
 }

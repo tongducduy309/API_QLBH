@@ -53,4 +53,9 @@ public class OrderController {
     ResponseEntity<ResponseObject> getNextOrderCode(){
         return orderService.getNextOrderCode();
     }
+
+    @GetMapping("/recent")
+    ResponseEntity<ResponseObject> getNextOrderCode(@RequestParam Long amount){
+        return orderService.getOrdersRecent(amount);
+    }
 }

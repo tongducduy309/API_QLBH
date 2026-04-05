@@ -182,7 +182,7 @@ public class OrderService {
     /* =========================
        4️⃣ HANDLE UPDATE / CREATE
        ========================= */
-        for (OrderDetailUpdateReq dReq : req.getOrderDetailReqs()) {
+        for (OrderDetailUpdateReq dReq : req.getOrderDetailUpdateReqs()) {
 
             OrderDetail detail;
             double oldQty = 0;
@@ -366,6 +366,18 @@ public class OrderService {
                         .status(SuccessCode.REQUEST.getStatus())
                         .message("Danh sách hóa đơn còn công nợ")
                         .data(orders)
+                        .build()
+        );
+    }
+
+    @Transactional
+    public ResponseEntity<ResponseObject> getOrdersRecent(Long amount){
+        List<Order> orders = orderRepository.findOrdersRecent(amount);
+        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
+                ResponseObject.builder()
+                        .status(SuccessCode.REQUEST.getStatus())
+                        .message("Danh sách hóa đơn còn công nợ")
+                        .data(orderMapper.toOrderRecentRes(orders))
                         .build()
         );
     }

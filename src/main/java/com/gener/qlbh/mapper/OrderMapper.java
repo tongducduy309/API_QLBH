@@ -6,6 +6,7 @@ import com.gener.qlbh.dtos.request.OrderCreateReq;
 import com.gener.qlbh.dtos.request.OrderDetailCreateReq;
 import com.gener.qlbh.dtos.request.OrderDetailUpdateReq;
 import com.gener.qlbh.dtos.response.OrderDetailRes;
+import com.gener.qlbh.dtos.response.OrderRecentRes;
 import com.gener.qlbh.dtos.response.OrderRes;
 import com.gener.qlbh.models.Order;
 import com.gener.qlbh.models.OrderDetail;
@@ -70,7 +71,15 @@ public interface OrderMapper {
     @Mapping(target = "total",source = "total")
     OrderRes toOrderRes(Order order);
 
+
+
     List<OrderRes> toOrderRes(List<Order> orders);
+
+    @Mapping(target = "customerName", source = "nameCustomer")
+    @Mapping(target = "total",source = "total")
+    OrderRecentRes toOrderRecentRes(Order order);
+
+    List<OrderRecentRes> toOrderRecentRes(List<Order> orders);
 
     @Mapping(target = "id",          source = "id")
     @Mapping(target = "length",      source = "length")

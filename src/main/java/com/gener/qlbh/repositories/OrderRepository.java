@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.awt.print.Pageable;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,6 +19,11 @@ public interface OrderRepository extends JpaRepository<Order,Long> {
 
     List<Order> findByCustomer_IdAndRemainingAmountGreaterThanOrderByCreatedAtDesc(
             Long customerId, double remainingAmount);
+
+    @Query(value = """
+    SELECT * FROM orders o ORDER BY o.created_at DESC LIMIT :amount
+""", nativeQuery = true)
+    List<Order> findOrdersRecent(@Param("amount") Long amount);
 
     @Query("""
         SELECT new com.gener.qlbh.dtos.response.AnalysisRes(
