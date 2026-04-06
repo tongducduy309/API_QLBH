@@ -48,16 +48,16 @@ public class PurchaseReceiptsService {
 
         PurchaseReceiptMethod method = Optional
                 .ofNullable(req.getPurchaseReceiptMethod())
-                .orElse(PurchaseReceiptMethod.NEW);
+                .orElse(PurchaseReceiptMethod.SEPARATE);
 
 
         PurchaseReceipts purchaseReceipts = purchaseReceiptsMapper.toPurchaseReceipts(req);
-
+        purchaseReceipts.setPurchaseReceiptMethod(method);
         purchaseReceipts.setVariant(productVariant);
 
         InventoryLot inventoryLot = new InventoryLot();
         inventoryLot = inventoryRepository.findByVariantId(req.getProductVariantId());
-        if (method.equals(PurchaseReceiptMethod.ADDITIONAL)&& inventoryLot !=null){
+        if (method.equals(PurchaseReceiptMethod.ADDITIVE)&& inventoryLot !=null){
 //            inventoryLot.addQuantity(req.getTotalQuantity());
         }else{
             inventoryLot = InventoryLot.builder()

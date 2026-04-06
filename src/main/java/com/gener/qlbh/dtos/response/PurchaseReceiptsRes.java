@@ -14,7 +14,9 @@ import java.time.LocalDateTime;
 @Getter
 public class PurchaseReceiptsRes {
     private Long id;
-    private Long productVariantId;
+    private String productVariantCode;
+    private String productVariantSKU;
+    private PurchaseReceiptMethod purchaseReceiptMethod;
     private String name;
     private Double totalQuantity;
     private Double cost;

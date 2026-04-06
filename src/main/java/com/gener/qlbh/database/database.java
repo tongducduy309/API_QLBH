@@ -2,6 +2,7 @@ package com.gener.qlbh.database;
 
 import com.gener.qlbh.dtos.request.*;
 import com.gener.qlbh.dtos.request.OrderDetailCreateReq;
+import com.gener.qlbh.enums.OrderStatus;
 import com.gener.qlbh.models.*;
 import com.gener.qlbh.repositories.*;
 import com.gener.qlbh.services.OrderService;
@@ -29,11 +30,11 @@ public class database {
             @Override
             public void run(String... args) throws Exception {
 
-                Category category = Category.builder()
-                        .name("Tôn")
-                        .defaultBaseUnit("m")
-                        .build();
-                categoryRepository.save(category);
+//                Category category = Category.builder()
+//                        .name("Tôn")
+//                        .defaultBaseUnit("m")
+//                        .build();
+//                categoryRepository.save(category);
                 ProductCreateReq productCreateReq = ProductCreateReq.builder()
                         .name("Tôn Lạnh")
                         .baseUnit("m")
@@ -134,6 +135,7 @@ public class database {
                         .shippingFee(10000d)
                         .orderDetailCreateReqs(orderDetailCreateReqs)
                         .customerId(customer.getId())
+                        .status(OrderStatus.CONFIRMED)
                         .build();
                 orderService.createOrder(order);
 //                Product product = Product.builder()

@@ -2,6 +2,7 @@ package com.gener.qlbh.models;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.gener.qlbh.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +62,9 @@ public class Order {
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
+
+    @Builder.Default
+    private OrderStatus status = OrderStatus.CONFIRMED;
 
     @PrePersist
     public void prePersist() { if (createdAt==null) this.createdAt = LocalDateTime.now(); }

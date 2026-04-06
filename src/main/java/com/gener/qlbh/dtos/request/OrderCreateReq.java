@@ -1,5 +1,6 @@
 package com.gener.qlbh.dtos.request;
 
+import com.gener.qlbh.enums.OrderStatus;
 import lombok.*;
 
 import java.util.List;
@@ -20,4 +21,5 @@ public class OrderCreateReq {
     private Double tax;
     private List<OrderDetailCreateReq> orderDetailCreateReqs;
     private String createdAt;
+    private OrderStatus status;
 }

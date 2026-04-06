@@ -6,6 +6,6 @@ public record AuthenticationRes(
         Long id,
         String fullname,
         LocalDateTime createdAt,
-        String token
+        String accessToken
 ) {
 }

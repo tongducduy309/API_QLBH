@@ -1,5 +1,6 @@
 package com.gener.qlbh.dtos.request;
 
+import com.gener.qlbh.enums.OrderStatus;
 import lombok.*;
 
 import java.util.List;
@@ -21,4 +22,5 @@ public class OrderUpdateReq {
     private Double shippingFee;
     private List<OrderDetailUpdateReq> orderDetailUpdateReqs;
     private String createdAt;
+    private OrderStatus status;
 }

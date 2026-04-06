@@ -2,6 +2,7 @@ package com.gener.qlbh.models;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.gener.qlbh.enums.PurchaseReceiptMethod;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,6 +26,8 @@ public class PurchaseReceipts {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "variant_id")
     private ProductVariant variant;
+
+    private PurchaseReceiptMethod purchaseReceiptMethod;
 
     private Double totalQuantity;
 

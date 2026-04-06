@@ -2,6 +2,7 @@ package com.gener.qlbh.services;
 
 import com.gener.qlbh.dtos.request.*;
 import com.gener.qlbh.enums.ErrorCode;
+import com.gener.qlbh.enums.OrderStatus;
 import com.gener.qlbh.enums.SuccessCode;
 import com.gener.qlbh.exception.APIException;
 import com.gener.qlbh.mapper.CustomerMapper;
@@ -95,7 +96,7 @@ public class OrderService {
             orderDetail.setBaseUnit(orderDetail.getBaseUnit());
             orderDetail.setPrice(orderDetailReq.getPrice());
             orderDetail.setLineIndex(orderDetailReq.getLineIndex());
-            if (productVariant!=null){
+            if (productVariant!=null && req.getStatus()!= OrderStatus.DRAFT){
                 Optional<InventoryLot> inventory = inventoryRepository.findById(orderDetailReq.getInventoryId());
                 if (inventory.isPresent()){
                     inventory.get().deduct(orderDetail.getTotalQuantity());

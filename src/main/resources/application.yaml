@@ -5,7 +5,7 @@ spring:
   application:
     name: qlbh
 #  datasource:
-#     Ví dụ H2 file để dễ di chuyển
+##     Ví dụ H2 file để dễ di chuyển
 #    url: ${SPRING_DATASOURCE_URL:jdbc:sqlite:${user.home}/.qlbh/database.db}
 #    driver-class-name: org.sqlite.JDBC
 #  jpa:
