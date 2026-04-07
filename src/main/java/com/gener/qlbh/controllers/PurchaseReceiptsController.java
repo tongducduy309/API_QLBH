@@ -28,4 +28,9 @@ public class PurchaseReceiptsController {
     ResponseEntity<ResponseObject> deletePurchaseReceipts(@PathVariable Long id) throws APIException {
         return purchaseReceiptsService.deletePurchaseReceipts(id);
     }
+
+    @GetMapping("/product/{productId}")
+    ResponseEntity<ResponseObject> getAllPurchaseReceiptsByProductId(@PathVariable Long productId){
+        return purchaseReceiptsService.getAllPurchaseReceiptsByProductId(productId);
+    }
 }

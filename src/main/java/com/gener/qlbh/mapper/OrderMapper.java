@@ -46,6 +46,7 @@ public interface OrderMapper {
     @Mapping(target = "baseUnit",source = "baseUnit")
     @Mapping(target = "inventory",ignore = true)
     @Mapping(target = "lineIndex",source = "lineIndex")
+    @Mapping(target = "kind",source = "kind")
     OrderDetail toOrderDetail(OrderDetailCreateReq req);
 
     @Mapping(target = "id",      source = "id")
@@ -57,6 +58,7 @@ public interface OrderMapper {
     @Mapping(target = "name",source = "name")
     @Mapping(target = "baseUnit",source = "baseUnit")
     @Mapping(target = "inventory", ignore = true)
+    @Mapping(target = "kind",source = "kind")
     OrderDetail toOrderDetail(OrderDetailUpdateReq req);
 
     Set<OrderDetail> toEntityDetails_Create(List<OrderDetailCreateReq> reqs);
@@ -92,6 +94,7 @@ public interface OrderMapper {
     @Mapping(target = "subtotal",    source = "subtotal")
     @Mapping(target = "totalQuantity",    source = "totalQuantity")
     @Mapping(target = "inventoryId",    source = "inventory.id")
+    @Mapping(target = "kind",source = "kind")
     OrderDetailRes toOrderDetailRes(OrderDetail orderDetail);
 
     @Mapping(target = "total",    source = "total")

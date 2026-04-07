@@ -1,5 +1,6 @@
 package com.gener.qlbh.dtos.response;
 
+import com.gener.qlbh.enums.OrderDetailKind;
 import jakarta.persistence.Column;
 import lombok.*;
 
@@ -20,4 +21,5 @@ public class OrderDetailRes {
     private Long productVariantId;
     private String baseUnit;
     private Long inventoryId;
+    private OrderDetailKind kind;
 }

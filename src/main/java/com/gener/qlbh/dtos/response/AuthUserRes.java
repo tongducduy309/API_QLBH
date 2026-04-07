@@ -1,20 +1,17 @@
 package com.gener.qlbh.dtos.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Getter
 @Setter
-public class UserProfileRes {
-    private Long id;
-    private String username;
+@Builder
+public class AuthUserRes {
     private String fullName;
-    private String email;
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime createdAt;
 }

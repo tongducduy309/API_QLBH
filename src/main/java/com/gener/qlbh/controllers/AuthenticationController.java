@@ -24,7 +24,7 @@ public class AuthenticationController {
         return authencationService.login(loginReq);
     }
     @PostMapping("/introspect")
-    ResponseEntity<ResponseObject> introspect(@RequestBody IntrospectReq introspectRequest) throws ParseException, JOSEException {
+    ResponseEntity<ResponseObject> introspect(@RequestBody IntrospectReq introspectRequest) throws ParseException, JOSEException, APIException {
         return authencationService.introspect(introspectRequest);
     }
     @GetMapping("/me")

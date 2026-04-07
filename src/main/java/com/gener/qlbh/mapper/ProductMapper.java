@@ -83,7 +83,8 @@ public interface ProductMapper {
         res.setStorePrice(variant.getStorePrice());
         res.setRemainingQty(inventory.getRemainingQty());
         res.setCostPrice(inventory.getCostPrice());
-        res.setActive(variant.isActive());
+        res.setActive(variant.getBusinessStatus());
+
 
         return res;
     }

@@ -22,4 +22,5 @@ public class OrderCreateReq {
     private List<OrderDetailCreateReq> orderDetailCreateReqs;
     private String createdAt;
     private OrderStatus status;
+
 }

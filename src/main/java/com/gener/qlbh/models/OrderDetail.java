@@ -2,7 +2,9 @@ package com.gener.qlbh.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.gener.qlbh.enums.OrderDetailKind;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.Hibernate;
 
@@ -35,6 +37,9 @@ public class OrderDetail {
     private Double length;
     private Double quantity;
     private String baseUnit;
+
+    @NotNull
+    private OrderDetailKind kind;
 
     @Column(name="line_index")
     private int lineIndex;

@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -27,6 +28,7 @@ public class PurchaseReceiptsService {
     private final InventoryRepository inventoryRepository;
     private final ProductVariantRepository productVariantRepository;
 
+    @Transactional
     public ResponseEntity<ResponseObject> getAllPurchaseReceipts(){
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
@@ -36,6 +38,18 @@ public class PurchaseReceiptsService {
                         .build()
         );
 
+    }
+
+    @Transactional
+    public ResponseEntity<ResponseObject> getAllPurchaseReceiptsByProductId(Long productId){
+        List<PurchaseReceipts> purchaseReceipts = purchaseReceiptsRepository.findAllByProductId(productId);
+        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
+                ResponseObject.builder()
+                        .status(SuccessCode.REQUEST.getStatus())
+                        .message("Get All Purchase Receipts By Product ID Successfully")
+                        .data(purchaseReceiptsMapper.toPurchaseReceiptsRes(purchaseReceipts))
+                        .build()
+        );
     }
 
     @Transactional

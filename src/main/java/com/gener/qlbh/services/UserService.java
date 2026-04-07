@@ -54,4 +54,12 @@ public class UserService {
 
         );
     }
+
+    @Transactional
+    public User getUserFromToken() throws APIException {
+        var context = SecurityContextHolder.getContext();
+        String id =  context.getAuthentication().getName();
+        return userRepository.findById(Long.parseLong(id)).orElseThrow(()->
+                new APIException(ErrorCode.USER_NOT_FOUND));
+    }
 }

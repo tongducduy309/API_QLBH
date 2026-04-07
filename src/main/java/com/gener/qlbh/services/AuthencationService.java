@@ -3,6 +3,7 @@ package com.gener.qlbh.services;
 import com.gener.qlbh.dtos.request.IntrospectReq;
 import com.gener.qlbh.dtos.request.LoginReq;
 import com.gener.qlbh.dtos.response.AuthProfileRes;
+import com.gener.qlbh.dtos.response.AuthUserRes;
 import com.gener.qlbh.dtos.response.AuthenticationRes;
 import com.gener.qlbh.enums.ErrorCode;
 import com.gener.qlbh.enums.SuccessCode;
@@ -16,16 +17,14 @@ import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -37,9 +36,10 @@ import java.util.Date;
 import java.util.StringJoiner;
 
 @Service
+@RequiredArgsConstructor
 public class AuthencationService {
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final UserService userService;
     private static final Logger logger = LoggerFactory.getLogger(AuthencationService.class);
 
     @Value("${jwt.secret}")
@@ -49,7 +49,7 @@ public class AuthencationService {
     private int EXPIRATION_TOKEN;
 
     @Transactional
-    public ResponseEntity<ResponseObject> introspect(IntrospectReq introspectRequest) throws ParseException, JOSEException {
+    public ResponseEntity<ResponseObject> introspect(IntrospectReq introspectRequest) throws ParseException, JOSEException, APIException {
 //        System.out.println(SIGNER_KEY);
         String token = introspectRequest.getToken();
 
@@ -63,9 +63,23 @@ public class AuthencationService {
 
         var verified = signedJWT.verify(verifier);
 
+        User user = userService.getUserFromToken();
+
+        String tokenNew = generateToken(user);
+
         boolean value = verified &&expiredTime.after(new Date());
-        return ResponseEntity.status(value? HttpStatus.OK:HttpStatus.BAD_REQUEST).body(
-                new ResponseObject(verified?200:401,value?"Token True":"Token False",value)
+        return ResponseEntity.status(value?SuccessCode.REQUEST.getHttpStatusCode(): ErrorCode.UNAUTHORIZED.getHttpStatusCode()).body(
+                new ResponseObject(verified?SuccessCode.REQUEST.getStatus():ErrorCode.UNAUTHORIZED.getStatus(),
+                        value?"Token True":"Token False",
+                        AuthenticationRes.builder()
+                                .user(AuthUserRes.builder()
+                                        .fullName(user.getFullName())
+                                        .createdAt(user.getCreatedAt())
+                                        .build())
+                                .accessToken(tokenNew)
+                                .active(value)
+                                .build()
+                        )
         );
     }
 
@@ -78,12 +92,16 @@ public class AuthencationService {
 
         String token = generateToken(user);
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
-            new ResponseObject(SuccessCode.REQUEST.getStatus(), "Login Successfully",new AuthenticationRes(
-                    user.getId(),
-                    "",
-                    LocalDateTime.now(),
-                    token
-            ))
+            new ResponseObject(SuccessCode.REQUEST.getStatus(), "Login Successfully",
+                    AuthenticationRes.builder()
+                            .user(AuthUserRes.builder()
+                                    .fullName(user.getFullName())
+                                    .createdAt(user.getCreatedAt())
+                                    .build())
+                            .active(true)
+                            .accessToken(token)
+                            .build()
+                    )
         );
 
     }
@@ -95,7 +113,7 @@ public class AuthencationService {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(user.getUsername())
+                .subject(user.getId()+"")
                 .issuer("qlbh.com")
                 .issueTime(new Date())
                 .expirationTime(new Date(

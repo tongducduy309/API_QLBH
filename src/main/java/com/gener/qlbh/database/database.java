@@ -2,6 +2,7 @@ package com.gener.qlbh.database;
 
 import com.gener.qlbh.dtos.request.*;
 import com.gener.qlbh.dtos.request.OrderDetailCreateReq;
+import com.gener.qlbh.enums.OrderDetailKind;
 import com.gener.qlbh.enums.OrderStatus;
 import com.gener.qlbh.models.*;
 import com.gener.qlbh.repositories.*;
@@ -101,26 +102,31 @@ public class database {
                         .name(nameProduct)
                         .inventoryId(1L)
                         .baseUnit("m")
+                        .kind(OrderDetailKind.INVENTORY)
                         .build();
                 OrderDetailCreateReq orderDetailCreateReqB = OrderDetailCreateReq.builder()
                         .quantity(1d)
                         .price(20000d)
                         .name("Công uốn")
+                        .kind(OrderDetailKind.EXPENSE)
                         .build();
                 OrderDetailCreateReq orderDetailCreateReqC = OrderDetailCreateReq.builder()
                         .quantity(1d)
                         .price(20000d)
                         .name("Công uốn")
+                        .kind(OrderDetailKind.EXPENSE)
                         .build();
                 OrderDetailCreateReq orderDetailCreateReqD = OrderDetailCreateReq.builder()
                         .quantity(1d)
                         .price(20000d)
                         .name("Công uốn")
+                        .kind(OrderDetailKind.EXPENSE)
                         .build();
                 OrderDetailCreateReq orderDetailCreateReqE = OrderDetailCreateReq.builder()
                         .quantity(1d)
                         .price(20000d)
                         .name("Công uốn")
+                        .kind(OrderDetailKind.EXPENSE)
                         .build();
                 List<OrderDetailCreateReq> orderDetailCreateReqs = new ArrayList<>();
                 orderDetailCreateReqs.add(orderDetailCreateReqA);

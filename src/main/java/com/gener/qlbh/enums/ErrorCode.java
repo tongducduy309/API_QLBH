@@ -17,6 +17,8 @@ public enum ErrorCode {
     UNAUTHORIZED(401,"Yêu cầu xác thực người dùng", HttpStatus.UNAUTHORIZED),
     FORBIDDEN(403,"Hạn chế. Người dùng không được cấp quyền", HttpStatus.FORBIDDEN),
 
+    USER_NOT_FOUND(40410, "Không tìm thấy người dùng", HttpStatus.NOT_FOUND),
+
     BAD_REQUEST(400,"Đã xảy ra lỗi. Xin vui lòng thử lại", HttpStatus.BAD_REQUEST),
     NOT_FOUND(404,"Không tìm thấy trong hệ thống", HttpStatus.NOT_FOUND),
     CONFLICT(409,"Hệ thống bị xung đột", HttpStatus.CONFLICT),

@@ -20,5 +20,6 @@ public class OrderCustomerRes {
     private String email;
     private String taxCode;
     private String address;
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime createdAt;
 }
