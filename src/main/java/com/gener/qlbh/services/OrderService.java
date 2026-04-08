@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -116,7 +117,7 @@ public class OrderService {
         order.setSubtotal(subtotal);
         order.setAmount();
         order.setCustomer(customer);
-        order.setCreatedAt(req.getCreatedAt()==null? LocalDateTime.now():LocalDateTime.ofInstant(Instant.parse(req.getCreatedAt()), ZoneId.systemDefault()));
+        order.setCreatedAt(req.getCreatedAt()==null? LocalDate.now():LocalDate.ofInstant(Instant.parse(req.getCreatedAt()), ZoneId.systemDefault()));
 
         String code = orderNumberService.nextOrderCode();
         order.setCode(code);
@@ -206,6 +207,7 @@ public class OrderService {
             detail.setLength(dReq.getLength());
             detail.setBaseUnit(dReq.getBaseUnit());
             detail.setLineIndex(dReq.getLineIndex());
+            detail.setKind(dReq.getKind());
             /* ===== PRODUCT VARIANT ===== */
             ProductVariant variant = null;
             if (dReq.getProductVariantId() != null) {
@@ -281,8 +283,8 @@ public class OrderService {
 
         order.setCreatedAt(
                 req.getCreatedAt() == null
-                        ? LocalDateTime.now()
-                        : LocalDateTime.ofInstant(
+                        ? LocalDate.now()
+                        : LocalDate.ofInstant(
                         Instant.parse(req.getCreatedAt()),
                         ZoneId.systemDefault()
                 )

@@ -7,6 +7,7 @@ import com.gener.qlbh.models.OrderDetail;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -32,8 +33,8 @@ public class OrderRes {
     private Double total;
     private Set<OrderDetailRes> details;
 
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
-    private LocalDateTime createdAt;
+    @JsonFormat(pattern = "dd-MM-yyyy")
+    private LocalDate createdAt;
 
     private OrderStatus status;
 }

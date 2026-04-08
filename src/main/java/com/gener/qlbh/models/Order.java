@@ -8,6 +8,7 @@ import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Hibernate;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -60,14 +61,14 @@ public class Order {
     @OrderBy("line_index ASC")
     private Set<OrderDetail> details = new HashSet<>();
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createdAt;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate createdAt;
 
     @Builder.Default
     private OrderStatus status = OrderStatus.CONFIRMED;
 
     @PrePersist
-    public void prePersist() { if (createdAt==null) this.createdAt = LocalDateTime.now(); }
+    public void prePersist() { if (createdAt==null) this.createdAt = LocalDate.now(); }
 
 
     public void addDetail(OrderDetail d) {

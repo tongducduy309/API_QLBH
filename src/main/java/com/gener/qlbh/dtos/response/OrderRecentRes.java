@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -13,6 +14,6 @@ public class OrderRecentRes {
     private String code;
     private String customerName;
     private Double total;
-    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
-    private LocalDateTime createdAt;
+    @JsonFormat(pattern = "dd-MM-yyyy")
+    private LocalDate createdAt;
 }
