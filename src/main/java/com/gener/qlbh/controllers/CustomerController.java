@@ -39,4 +39,9 @@ public class CustomerController {
     ResponseEntity<ResponseObject> deleteCustomer(@PathVariable Long id){
         return customerService.deleteCustomer(id);
     }
+
+    @GetMapping("/with-debt")
+    public ResponseEntity<ResponseObject> getAllCustomersWithDebt() {
+        return customerService.getAllCustomersWithDebt();
+    }
 }

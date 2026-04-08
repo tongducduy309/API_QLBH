@@ -19,5 +19,5 @@ public class CustomerDetailRes {
     private String taxCode;
     private String address;
     private LocalDateTime createdAt;
-    private Double point;
+    private Double totalDebt;
 }

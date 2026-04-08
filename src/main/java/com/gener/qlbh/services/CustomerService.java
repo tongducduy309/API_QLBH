@@ -46,7 +46,6 @@ public class CustomerService {
                 .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
                 .build());
         CustomerDetailRes customerDetailRes = customerMapper.toCustomerDetailRes(customer);
-        customerDetailRes.setPoint(customerRepository.getPoint(id));
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
                         .status(SuccessCode.REQUEST.getStatus())
@@ -98,6 +97,16 @@ public class CustomerService {
 
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 new ResponseObject(SuccessCode.REQUEST.getStatus(), "Update Customer Successfully",customerRepository.save(newCustomer))
+        );
+    }
+
+    public ResponseEntity<ResponseObject> getAllCustomersWithDebt() {
+        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
+                ResponseObject.builder()
+                        .status(SuccessCode.REQUEST.getStatus())
+                        .message("Get all customers with debt successfully")
+                        .data(customerRepository.findAllCustomersWithDebt())
+                        .build()
         );
     }
 }

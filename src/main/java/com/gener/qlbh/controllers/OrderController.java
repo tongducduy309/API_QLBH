@@ -35,7 +35,7 @@ public class OrderController {
     }
 
     @DeleteMapping("/{id}")
-    ResponseEntity<ResponseObject> deleteOrder(@PathVariable Long id){
+    ResponseEntity<ResponseObject> deleteOrder(@PathVariable Long id) throws APIException {
         return orderService.deleteOrder(id);
     }
 
