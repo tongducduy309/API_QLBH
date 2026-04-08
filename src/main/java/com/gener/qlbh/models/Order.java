@@ -65,6 +65,7 @@ public class Order {
     private LocalDate createdAt;
 
     @Builder.Default
+    @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.CONFIRMED;
 
     @PrePersist

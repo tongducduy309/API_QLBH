@@ -27,6 +27,7 @@ public class PurchaseReceipts {
     @JoinColumn(name = "variant_id")
     private ProductVariant variant;
 
+    @Enumerated(EnumType.STRING)
     private PurchaseReceiptMethod purchaseReceiptMethod;
 
     private Double totalQuantity;

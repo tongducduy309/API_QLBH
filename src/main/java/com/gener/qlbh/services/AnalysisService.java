@@ -4,15 +4,15 @@ import com.gener.qlbh.dtos.response.AnalysisRes;
 import com.gener.qlbh.dtos.response.RevenueBucketRes;
 import com.gener.qlbh.dtos.response.SalesAnalysisResponse;
 import com.gener.qlbh.enums.SuccessCode;
-import com.gener.qlbh.interfaces.RevenueBucket;
-import com.gener.qlbh.models.Order;
 import com.gener.qlbh.models.ResponseObject;
 import com.gener.qlbh.repositories.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.time.*;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.Month;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
@@ -20,140 +20,112 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AnalysisService {
 
-
     private final OrderRepository orderRepository;
 
-    public ResponseEntity<ResponseObject> getDateSummary(LocalDate startDate, LocalDate endDate) {
+    public ResponseEntity<?> getDateSummary(LocalDate startDate, LocalDate endDate) {
+        validateRange(startDate, endDate);
 
-        LocalDateTime startOfDay = startDate.atStartOfDay();
+        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startDate, endDate);
+        Double grossProfit = orderRepository.calculateGrossProfit(startDate, endDate);
+        analysisRes.setTotalGrossProfit(grossProfit == null ? 0d : grossProfit);
 
-        LocalDateTime endOfDay = endDate.atTime(LocalTime.MAX);
+        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByDay(startDate, endDate);
 
-        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startOfDay,endOfDay);
-
-        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByDay(startOfDay,endOfDay);
-
-        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
-                ResponseObject.builder()
-                        .status(SuccessCode.REQUEST.getStatus())
-                        .message("Analysis Date Successfully")
-                        .data(
-                                SalesAnalysisResponse.builder()
-                                        .analysisRes(analysisRes)
-                                        .buckets(revenueBucket)
-                                        .build()
-                        )
-                        .build()
-        );
-
+        return buildResponse("Analysis date successfully", analysisRes, revenueBucket);
     }
 
-    public ResponseEntity<ResponseObject> getWeeklySummary(LocalDate startDate, LocalDate endDate) {
+    public ResponseEntity<?> getWeeklySummary(LocalDate startDate, LocalDate endDate) {
+        validateRange(startDate, endDate);
 
         LocalDate startOfWeek = startDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-
         LocalDate endOfWeek = endDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
 
-        LocalDateTime startDateTime = startOfWeek.atStartOfDay();
+        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startOfWeek, endOfWeek);
+        Double grossProfit = orderRepository.calculateGrossProfit(startOfWeek, endOfWeek);
+        analysisRes.setTotalGrossProfit(grossProfit == null ? 0d : grossProfit);
 
-        LocalDateTime endDateTime = endOfWeek.atTime(LocalTime.MAX);
+        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByDay(startOfWeek, endOfWeek);
 
-
-        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startDateTime,endDateTime);
-//
-        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByWeek(startDateTime,endDateTime);
-
-        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
-                ResponseObject.builder()
-                        .status(SuccessCode.REQUEST.getStatus())
-                        .message("Weekly Analysis Date Successfully")
-                        .data(
-                                SalesAnalysisResponse.builder()
-                                        .analysisRes(analysisRes)
-                                        .buckets(revenueBucket)
-                                        .build()
-                        )
-                        .build()
-        );
+        return buildResponse("Weekly analysis successfully", analysisRes, revenueBucket);
     }
 
-    public ResponseEntity<ResponseObject> getMonthlySummary(LocalDate startDate, LocalDate endDate) {
+    public ResponseEntity<?> getMonthlySummary(LocalDate startDate, LocalDate endDate) {
+        validateRange(startDate, endDate);
+
         LocalDate startOfMonth = startDate.with(TemporalAdjusters.firstDayOfMonth());
         LocalDate endOfMonth = endDate.with(TemporalAdjusters.lastDayOfMonth());
-        LocalDateTime startDateTime = startOfMonth.atStartOfDay();
-        LocalDateTime endDateTime = endOfMonth.atTime(LocalTime.MAX);
 
-        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startDateTime,endDateTime);
+        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startOfMonth, endOfMonth);
+        Double grossProfit = orderRepository.calculateGrossProfit(startOfMonth, endOfMonth);
+        analysisRes.setTotalGrossProfit(grossProfit == null ? 0d : grossProfit);
 
-        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByMonth(startDateTime,endDateTime);
+        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByDay(startOfMonth, endOfMonth);
 
-        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
-                ResponseObject.builder()
-                        .status(SuccessCode.REQUEST.getStatus())
-                        .message("Monthly Analysis Date Successfully")
-                        .data(
-                                SalesAnalysisResponse.builder()
-                                        .analysisRes(analysisRes)
-                                        .buckets(revenueBucket)
-                                        .build()
-                        )
-                        .build()
-        );
+        return buildResponse("Monthly analysis successfully", analysisRes, revenueBucket);
     }
 
-    public ResponseEntity<ResponseObject> getQuarterlySummary(LocalDate startDate, LocalDate endDate) {
+    public ResponseEntity<?> getQuarterlySummary(LocalDate startDate, LocalDate endDate) {
+        validateRange(startDate, endDate);
 
-        Month startFirstMonth = startDate.getMonth().firstMonthOfQuarter();
-        LocalDate startOfQuarter = LocalDate.of(startDate.getYear(), startFirstMonth, 1);
+        Month startQuarterMonth = startDate.getMonth().firstMonthOfQuarter();
+        LocalDate startOfQuarter = LocalDate.of(startDate.getYear(), startQuarterMonth, 1);
 
-
-        Month endFirstMonth = endDate.getMonth().firstMonthOfQuarter();
-        LocalDate endOfQuarter = LocalDate.of(endDate.getYear(), endFirstMonth.plus(2), 1)
+        Month endQuarterMonth = endDate.getMonth().firstMonthOfQuarter();
+        LocalDate endOfQuarter = LocalDate.of(endDate.getYear(), endQuarterMonth.plus(2), 1)
                 .with(TemporalAdjusters.lastDayOfMonth());
 
-        LocalDateTime startDateTime = startOfQuarter.atStartOfDay();
-        LocalDateTime endDateTime   = endOfQuarter.atTime(LocalTime.MAX); // inclusive
+        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startOfQuarter, endOfQuarter);
+        Double grossProfit = orderRepository.calculateGrossProfit(startOfQuarter, endOfQuarter);
+        analysisRes.setTotalGrossProfit(grossProfit == null ? 0d : grossProfit);
 
+        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByDay(startOfQuarter, endOfQuarter);
 
-        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startDateTime, endDateTime);
-
-
-        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByQuarter(startDateTime, endDateTime);
-
-        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
-                ResponseObject.builder()
-                        .status(SuccessCode.REQUEST.getStatus())
-                        .message("Quarterly Analysis Date Successfully")
-                        .data(
-                                SalesAnalysisResponse.builder()
-                                        .analysisRes(analysisRes)
-                                        .buckets(revenueBucket)
-                                        .build()
-                        )
-                        .build()
-        );
+        return buildResponse("Quarterly analysis successfully", analysisRes, revenueBucket);
     }
 
-    public ResponseEntity<ResponseObject> getYearlySummary(LocalDate startDate, LocalDate endDate) {
+    public ResponseEntity<?> getYearlySummary(LocalDate startDate, LocalDate endDate) {
+        validateRange(startDate, endDate);
+
         LocalDate startOfYear = startDate.with(TemporalAdjusters.firstDayOfYear());
         LocalDate endOfYear = endDate.with(TemporalAdjusters.lastDayOfYear());
-        LocalDateTime startDateTime = startOfYear.atStartOfDay();
-        LocalDateTime endDateTime = endOfYear.atTime(LocalTime.MAX);
-        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startDateTime,endDateTime);
 
-        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByYear(startDateTime,endDateTime);
+        AnalysisRes analysisRes = orderRepository.calculateSalesReport(startOfYear, endOfYear);
+        Double grossProfit = orderRepository.calculateGrossProfit(startOfYear, endOfYear);
+        analysisRes.setTotalGrossProfit(grossProfit == null ? 0d : grossProfit);
 
-        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
-                ResponseObject.builder()
-                        .status(SuccessCode.REQUEST.getStatus())
-                        .message("Yearly Analysis Date Successfully")
-                        .data(
-                                SalesAnalysisResponse.builder()
-                                        .analysisRes(analysisRes)
-                                        .buckets(revenueBucket)
-                                        .build()
-                        )
-                        .build()
-        );
+        List<RevenueBucketRes> revenueBucket = orderRepository.revenueByDay(startOfYear, endOfYear);
+
+        return buildResponse("Yearly analysis successfully", analysisRes, revenueBucket);
+    }
+
+    private void validateRange(LocalDate startDate, LocalDate endDate) {
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("Ngày bắt đầu và ngày kết thúc không được để trống");
+        }
+
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("Ngày bắt đầu không được lớn hơn ngày kết thúc");
+        }
+    }
+
+    private ResponseEntity<ResponseObject> buildResponse(
+            String message,
+            AnalysisRes analysisRes,
+            List<RevenueBucketRes> buckets
+    ) {
+        SalesAnalysisResponse response = SalesAnalysisResponse.builder()
+                .analysisRes(analysisRes)
+                .buckets(buckets)
+                .build();
+
+        return ResponseEntity
+                .status(SuccessCode.REQUEST.getHttpStatusCode())
+                .body(
+                        ResponseObject.builder()
+                                .status(SuccessCode.REQUEST.getStatus())
+                                .message(message)
+                                .data(response)
+                                .build()
+                );
     }
 }
