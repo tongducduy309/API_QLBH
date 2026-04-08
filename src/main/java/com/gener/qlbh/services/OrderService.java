@@ -97,7 +97,7 @@ public class OrderService {
                 detail.setPrice(dReq.getPrice());
                 detail.setLineIndex(dReq.getLineIndex());
 
-                if (shouldAffectInventory(req.getStatus()) && variant != null) {
+                if (shouldAffectInventory(req.getStatus()) && variant != null && inventory!=null) {
                     deductInventory(inventory, detail.getTotalQuantity(), dReq.getName());
                 }
 
@@ -333,7 +333,7 @@ public class OrderService {
     }
 
     private boolean shouldAffectInventory(OrderStatus status) {
-        return status != null && status != OrderStatus.DRAFT;
+        return status == OrderStatus.CONFIRMED;
     }
 
     private void deductInventory(InventoryLot inventory, double quantity, String productName) throws APIException {

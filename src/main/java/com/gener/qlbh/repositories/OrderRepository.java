@@ -21,7 +21,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query(value = """
     SELECT *
     FROM orders o
-    WHERE o.status <> 'DRAFT'
+    WHERE o.status = 'CONFIRMED'
     ORDER BY o.created_at DESC
     LIMIT :amount
 """, nativeQuery = true)
@@ -42,7 +42,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         )
         FROM Order o
         WHERE o.createdAt BETWEEN :start AND :end
-          AND o.status <> com.gener.qlbh.enums.OrderStatus.DRAFT
+          AND o.status = com.gener.qlbh.enums.OrderStatus.CONFIRMED
     """)
     AnalysisRes calculateSalesReport(
             @Param("start") LocalDate start,
@@ -61,7 +61,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         )
         FROM Order o
         WHERE o.createdAt BETWEEN :start AND :end
-          AND o.status <> com.gener.qlbh.enums.OrderStatus.DRAFT
+          AND o.status = com.gener.qlbh.enums.OrderStatus.CONFIRMED
         GROUP BY o.createdAt
         ORDER BY o.createdAt
     """)
@@ -84,7 +84,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         JOIN od.order o
         LEFT JOIN od.inventory i
         WHERE o.createdAt BETWEEN :start AND :end
-          AND o.status <> com.gener.qlbh.enums.OrderStatus.DRAFT
+          AND o.status = com.gener.qlbh.enums.OrderStatus.CONFIRMED
     """)
     Double calculateGrossProfit(
             @Param("start") LocalDate start,
