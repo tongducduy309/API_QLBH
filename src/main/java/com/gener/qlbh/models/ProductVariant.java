@@ -31,7 +31,7 @@ public class ProductVariant {
     @JsonBackReference
     private Product product;
 
-    private Double weight;
+    private String weight;
 
     private Double retailPrice;
 

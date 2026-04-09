@@ -75,7 +75,7 @@ public class SearchService {
                 .filter(v -> containsAny(q,
                         v.getSku(),
                         v.getVariantCode(),
-                        toStr(v.getWeight()),
+                        v.getWeight(),
                         toMoneySearch(v.getRetailPrice()),
                         toMoneySearch(v.getStorePrice())))
                 .map(ProductVariant::getProduct)
@@ -94,7 +94,7 @@ public class SearchService {
                 .filter(v -> containsAny(q,
                         v.getSku(),
                         v.getVariantCode(),
-                        toStr(v.getWeight()),
+                        v.getWeight(),
                         toMoneySearch(v.getRetailPrice()),
                         toMoneySearch(v.getStorePrice())))
                 .forEach(p -> foundVariants.put(p.getId(), p));

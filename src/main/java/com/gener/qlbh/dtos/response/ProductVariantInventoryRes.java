@@ -15,7 +15,7 @@ public class ProductVariantInventoryRes {
     private boolean outOfStock;
     private Long variantId;
     private String variantCode;
-    private Double weight;
+    private String weight;
     private Double retailPrice;
     private Double storePrice;
     private Double remainingQty;

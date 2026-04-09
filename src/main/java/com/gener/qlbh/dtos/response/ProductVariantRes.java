@@ -1,4 +1,4 @@
-package com.gener.qlbh.dtos.request;
+package com.gener.qlbh.dtos.response;
 
 import lombok.*;
 
@@ -7,13 +7,12 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductVariantCreateReq {
-    private Long productId;
+public class ProductVariantRes {
+    private Long id;
     private String variantCode;
-    private String sku;
     private String weight;
     private Double retailPrice;
     private Double storePrice;
-    private Double remainingQty;
-    private Boolean active;
+    private boolean active;
+    private String productName;
 }

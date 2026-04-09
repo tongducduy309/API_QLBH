@@ -25,6 +25,16 @@ public class ProductVariantService {
     private final ProductMapper productMapper;
 
     @Transactional
+    public ResponseEntity<ResponseObject> getAllVariants(){
+        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
+                ResponseObject.builder()
+                        .status(SuccessCode.REQUEST.getStatus())
+                        .message("Get All Product Variants Successfully")
+                        .data(productMapper.toProductVariantRes(variantRepository.findAll()))
+                        .build()
+        );
+    }
+    @Transactional
     public ResponseEntity<ResponseObject> createVariant(ProductVariantCreateReq req) throws APIException {
         if (req == null || req.getProductId() == null) {
             throw APIException.builder()
@@ -89,4 +99,7 @@ public class ProductVariantService {
                         .build()
         );
     }
+
+
+
 }

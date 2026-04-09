@@ -73,11 +73,12 @@ public class database {
                 customerRepository.save(customer);
 
                 ProductVariantCreateReq vReq = ProductVariantCreateReq.builder()
-                        .productId(productId)        // đúng kiểu id
+                        .productId(productId)
                         .variantCode("0.40mm")
                         .sku("TL4DA")
                         .retailPrice(160000.0)
                         .storePrice(155000.0)
+                        .weight("4.2kg")
                         .build();
 
                 ResponseEntity<ResponseObject> vRes = productVariantService.createVariant(vReq);
@@ -89,6 +90,7 @@ public class database {
                         .productVariantId(variantId)  // dùng variant id
                         .totalQuantity(500d)
                         .cost(80000d)
+                        .totalCost(40000000d)
                         .supplier("Dong A")
                         .build();
                 purchaseReceiptsService.createPurchaseReceipts(purchaseReceiptsCreateReq);

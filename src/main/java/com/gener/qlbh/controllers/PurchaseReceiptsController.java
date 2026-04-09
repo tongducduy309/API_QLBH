@@ -33,4 +33,9 @@ public class PurchaseReceiptsController {
     ResponseEntity<ResponseObject> getAllPurchaseReceiptsByProductId(@PathVariable Long productId){
         return purchaseReceiptsService.getAllPurchaseReceiptsByProductId(productId);
     }
+
+    @GetMapping("/{id}")
+    ResponseEntity<ResponseObject> getPurchaseReceiptDetail(@PathVariable Long id) throws APIException {
+        return purchaseReceiptsService.getPurchaseReceiptDetail(id);
+    }
 }

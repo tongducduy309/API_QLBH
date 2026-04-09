@@ -25,7 +25,7 @@ public class InventoryRes {
     private String baseUnit;
     private Category category;
     private String variantCode;
-    private Double weight;
+    private String weight;
     private Double retailPrice;
     private Double storePrice;
     private Long variantId;

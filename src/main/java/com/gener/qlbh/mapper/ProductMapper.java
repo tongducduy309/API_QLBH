@@ -6,6 +6,7 @@ import com.gener.qlbh.dtos.request.ProductVariantCreateReq;
 import com.gener.qlbh.dtos.request.ProductVariantUpdateReq;
 import com.gener.qlbh.dtos.response.ProductInventoryRes;
 import com.gener.qlbh.dtos.response.ProductVariantInventoryRes;
+import com.gener.qlbh.dtos.response.ProductVariantRes;
 import com.gener.qlbh.models.InventoryLot;
 import com.gener.qlbh.models.Product;
 import com.gener.qlbh.models.ProductVariant;
@@ -28,6 +29,10 @@ public interface ProductMapper {
 
     @Mapping(target = "variantCode", source = "variantCode")
     ProductVariant toProductVariant(ProductVariantUpdateReq req);
+
+    @Mapping(target = "productName", source = "product.name")
+    ProductVariantRes toProductVariantRes(ProductVariant productVariant);
+    List<ProductVariantRes> toProductVariantRes(List<ProductVariant> productVariant);
 
     List<ProductVariant> toProductVariantList_Create(List<ProductVariantCreateReq> req);
 

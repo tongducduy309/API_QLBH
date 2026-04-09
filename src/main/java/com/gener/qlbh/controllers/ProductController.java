@@ -7,6 +7,7 @@ import com.gener.qlbh.exception.APIException;
 import com.gener.qlbh.models.Product;
 import com.gener.qlbh.models.ResponseObject;
 import com.gener.qlbh.services.ProductService;
+import com.gener.qlbh.services.ProductVariantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,7 @@ public class ProductController {
     ResponseEntity<ResponseObject> getAllProducts(){
         return productService.getAllProducts();
     }
+
 
     @PostMapping
     ResponseEntity<ResponseObject> createProduct(@RequestBody ProductCreateReq req) throws APIException {

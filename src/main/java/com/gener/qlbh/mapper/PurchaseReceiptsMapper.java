@@ -13,6 +13,7 @@ import java.util.List;
 public interface PurchaseReceiptsMapper {
     @Mapping(target = "totalQuantity",source = "totalQuantity")
     @Mapping(target = "cost",source = "cost")
+    @Mapping(target = "totalCost",source = "totalCost")
     PurchaseReceipts toPurchaseReceipts(PurchaseReceiptsCreateReq req);
 
 

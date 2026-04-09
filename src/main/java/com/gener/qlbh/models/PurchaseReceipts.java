@@ -34,6 +34,8 @@ public class PurchaseReceipts {
 
     private Double cost;
 
+    private Double totalCost;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 

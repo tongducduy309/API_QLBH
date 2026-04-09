@@ -11,10 +11,12 @@ import lombok.*;
 @Setter
 @Builder
 public class PurchaseReceiptsCreateReq {
+    private String lotCode;
     private Long productVariantId;
     private PurchaseReceiptMethod purchaseReceiptMethod;
     private Double totalQuantity;
     private Double cost;
     private String supplier;
     private String note;
+    private Double totalCost;
 }
