@@ -39,6 +39,9 @@ public class User {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private UserSetting setting;
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();

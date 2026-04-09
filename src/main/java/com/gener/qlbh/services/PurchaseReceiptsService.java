@@ -122,10 +122,10 @@ public class PurchaseReceiptsService {
                     .build();
         }
 
-        InventoryLot inv = inventoryRepository.findById(receipt.getInventoryId())
+        InventoryLot inv = inventoryRepository.findById(receipt.getInventory().getId())
                 .orElseThrow(() -> APIException.builder()
                         .status(ErrorCode.NOT_FOUND.getStatus())
-                        .message("Cannot Found Inventory With Id = " + receipt.getInventoryId())
+                        .message("Cannot Found Inventory With Id = " + receipt.getInventory().getId())
                         .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
                         .build());
 

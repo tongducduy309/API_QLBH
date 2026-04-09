@@ -18,6 +18,7 @@ public class PurchaseReceiptsRes {
     private String productVariantCode;
     private String productVariantSKU;
     private PurchaseReceiptMethod purchaseReceiptMethod;
+    private Long productId;
     private String name;
     private Double totalQuantity;
     private Double cost;

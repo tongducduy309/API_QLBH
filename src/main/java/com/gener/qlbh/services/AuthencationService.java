@@ -40,6 +40,7 @@ import java.util.StringJoiner;
 public class AuthencationService {
     private final UserRepository userRepository;
     private final UserService userService;
+//    private final AuthencationService authencationService;
     private static final Logger logger = LoggerFactory.getLogger(AuthencationService.class);
 
     @Value("${jwt.secret}")
@@ -63,7 +64,7 @@ public class AuthencationService {
 
         var verified = signedJWT.verify(verifier);
 
-        User user = userService.getUserFromToken();
+        User user = getUserFromToken();
 
         String tokenNew = generateToken(user);
 
@@ -160,5 +161,13 @@ public class AuthencationService {
 
 
         );
+    }
+
+    @Transactional
+    public User getUserFromToken() throws APIException {
+        var context = SecurityContextHolder.getContext();
+        String id =  context.getAuthentication().getName();
+        return userRepository.findById(Long.parseLong(id)).orElseThrow(()->
+                new APIException(ErrorCode.USER_NOT_FOUND));
     }
 }

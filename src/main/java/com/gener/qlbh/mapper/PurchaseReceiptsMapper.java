@@ -20,6 +20,7 @@ public interface PurchaseReceiptsMapper {
     @Mapping(target = "productVariantCode",source = "variant.variantCode")
     @Mapping(target = "productVariantSKU",source = "variant.sku")
     @Mapping(target = "purchaseReceiptMethod",source = "purchaseReceiptMethod")
+    @Mapping(target = "productId",source = "variant.product.id")
     PurchaseReceiptsRes toPurchaseReceiptsRes(PurchaseReceipts req);
 
     List<PurchaseReceiptsRes> toPurchaseReceiptsRes(List<PurchaseReceipts> reqs);

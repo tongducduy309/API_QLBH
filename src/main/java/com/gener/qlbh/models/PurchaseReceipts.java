@@ -41,7 +41,9 @@ public class PurchaseReceipts {
 
     private String note;
 
-    private Long inventoryId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "inventory_lot_id")
+    private InventoryLot inventory;
 
 
     @PrePersist
