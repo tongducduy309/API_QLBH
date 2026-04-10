@@ -24,7 +24,7 @@ public class PurchaseReceipts {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "variant_id")
+    @JoinColumn(name = "variant_id", nullable = false)
     private ProductVariant variant;
 
     @Enumerated(EnumType.STRING)
@@ -44,7 +44,7 @@ public class PurchaseReceipts {
     private String note;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "inventory_lot_id")
+    @JoinColumn(name = "inventory_lot_id", nullable = false)
     private InventoryLot inventory;
 
 
