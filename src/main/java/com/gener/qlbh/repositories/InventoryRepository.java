@@ -32,4 +32,6 @@ public interface InventoryRepository extends JpaRepository<InventoryLot,Long> {
     order by l.remainingQty asc
 """)
     List<InventoryLot> findAvailableLots(@Param("variantId") Long variantId);
+
+    Optional<InventoryLot> findFirstByVariant_IdAndLotCode(Long productVariantId, String lotCode);
 }

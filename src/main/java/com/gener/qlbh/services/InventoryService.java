@@ -2,6 +2,7 @@ package com.gener.qlbh.services;
 
 import com.gener.qlbh.dtos.request.OrderDetailCreateReq;
 import com.gener.qlbh.dtos.request.OrderCreateReq;
+import com.gener.qlbh.dtos.response.ProductInventoryRes;
 import com.gener.qlbh.enums.ErrorCode;
 import com.gener.qlbh.enums.SuccessCode;
 import com.gener.qlbh.exception.APIException;
@@ -38,6 +39,11 @@ public class InventoryService {
                         .build()
         );
 
+    }
+
+    @Transactional
+    public List<ProductInventoryRes> listInventoryRows(boolean status) {
+        return productMapper.toProductInventoryRes(productRepository.findAllWithVariantsAndInventories(status));
     }
 
     @Transactional

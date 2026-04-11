@@ -2,6 +2,9 @@ package com.gener.qlbh.services;
 
 import com.gener.qlbh.dtos.request.UserSettingUpdateReq;
 import com.gener.qlbh.dtos.response.UserSettingRes;
+import com.gener.qlbh.entities.PrintOptions;
+import com.gener.qlbh.enums.PageOrientation;
+import com.gener.qlbh.enums.PaperSize;
 import com.gener.qlbh.exception.APIException;
 import com.gener.qlbh.models.ResponseObject;
 import com.gener.qlbh.models.User;
@@ -41,18 +44,16 @@ public class UserSettingService {
         UserSetting setting = userSettingRepository.findByUser(user)
                 .orElseGet(() -> createDefaultSetting(user));
 
-        setting.setAppName(req.getAppName() == null || req.getAppName().isBlank()
-                ? "Quản lý bán hàng"
-                : req.getAppName().trim());
-
-        setting.setAppIcon(req.getAppIcon());
 
         if (req.getEmailNotify() != null) {
             setting.setEmailNotify(req.getEmailNotify());
         }
 
-        if (req.getDesktopNotify() != null) {
-            setting.setDesktopNotify(req.getDesktopNotify());
+        if (req.getPrintOptions() != null) {
+            setting.setCopies(req.getPrintOptions().getCopies());
+            setting.setPaperSize(req.getPrintOptions().getPaperSize());
+            setting.setPageOrientation(req.getPrintOptions().getPageOrientation());
+            setting.setDeviceName(req.getPrintOptions().getDeviceName());
         }
 
         userSettingRepository.save(setting);
@@ -69,10 +70,11 @@ public class UserSettingService {
     private UserSetting createDefaultSetting(User user) {
         UserSetting setting = UserSetting.builder()
                 .user(user)
-                .appName("Quản lý bán hàng")
-                .appIcon(null)
                 .emailNotify(true)
-                .desktopNotify(false)
+                .paperSize(PaperSize.A4)
+                .copies(2)
+                .deviceName("")
+                .pageOrientation(PageOrientation.portrait)
                 .build();
 
         return userSettingRepository.save(setting);
@@ -81,10 +83,13 @@ public class UserSettingService {
     private UserSettingRes mapToRes(UserSetting setting) {
         return UserSettingRes.builder()
                 .id(setting.getId())
-                .appName(setting.getAppName())
-                .appIcon(setting.getAppIcon())
                 .emailNotify(setting.getEmailNotify())
-                .desktopNotify(setting.getDesktopNotify())
+                .printOptions(PrintOptions.builder()
+                        .copies(setting.getCopies())
+                        .deviceName(setting.getDeviceName())
+                        .pageOrientation(setting.getPageOrientation())
+                        .paperSize(setting.getPaperSize())
+                        .build())
                 .build();
     }
 }

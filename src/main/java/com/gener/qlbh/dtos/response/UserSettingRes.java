@@ -1,5 +1,6 @@
 package com.gener.qlbh.dtos.response;
 
+import com.gener.qlbh.entities.PrintOptions;
 import lombok.*;
 
 @NoArgsConstructor
@@ -9,8 +10,6 @@ import lombok.*;
 @Builder
 public class UserSettingRes {
     private Long id;
-    private String appName;
-    private String appIcon;
     private Boolean emailNotify;
-    private Boolean desktopNotify;
+    private PrintOptions printOptions;
 }

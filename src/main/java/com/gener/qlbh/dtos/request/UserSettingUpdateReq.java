@@ -1,5 +1,6 @@
 package com.gener.qlbh.dtos.request;
 
+import com.gener.qlbh.entities.PrintOptions;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
@@ -10,12 +11,9 @@ import lombok.*;
 @Builder
 public class UserSettingUpdateReq {
 
-    @NotBlank(message = "Tên ứng dụng không được để trống")
-    private String appName;
-
-    private String appIcon;
 
     private Boolean emailNotify;
 
-    private Boolean desktopNotify;
+    private PrintOptions printOptions;
 }
+

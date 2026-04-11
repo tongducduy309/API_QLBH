@@ -1,5 +1,8 @@
 package com.gener.qlbh.models;
 
+import com.gener.qlbh.entities.PrintOptions;
+import com.gener.qlbh.enums.PageOrientation;
+import com.gener.qlbh.enums.PaperSize;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -16,20 +19,16 @@ public class UserSetting {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String appName;
-
-    @Lob
-    @Column(columnDefinition = "TEXT")
-    private String appIcon;
 
     @Builder.Default
     @Column(nullable = false)
     private Boolean emailNotify = true;
 
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean desktopNotify = false;
+    private PaperSize paperSize;
+    private PageOrientation pageOrientation;
+    private String deviceName;
+    private Integer copies;
+
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)

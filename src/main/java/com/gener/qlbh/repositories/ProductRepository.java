@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 
 public interface ProductRepository extends JpaRepository<Product,Long> {
@@ -17,4 +18,6 @@ public interface ProductRepository extends JpaRepository<Product,Long> {
     left join v.inventories i with i.active = :status
 """)
     List<Product> findAllWithVariantsAndInventories(@Param("status") boolean status);
+
+    Optional<Product> findFirstByVariants_Sku(String sku);
 }
