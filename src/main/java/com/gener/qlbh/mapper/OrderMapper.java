@@ -69,8 +69,11 @@ public interface OrderMapper {
     @Mapping(target = "customer.name", source = "nameCustomer")
     @Mapping(target = "customer.phone", source = "phoneCustomer")
     @Mapping(target = "customer.address", source = "addressCustomer")
+    @Mapping(target = "customer.email", source = "customer.email")
+    @Mapping(target = "customer.taxCode", source = "customer.taxCode")
     @Mapping(target = "taxAmount",source = "taxAmount")
     @Mapping(target = "total",source = "total")
+
     OrderRes toOrderRes(Order order);
 
 
@@ -95,6 +98,7 @@ public interface OrderMapper {
     @Mapping(target = "totalQuantity",    source = "totalQuantity")
     @Mapping(target = "inventoryId",    source = "inventory.id")
     @Mapping(target = "kind",source = "kind")
+    @Mapping(target = "inventoryCode",source = "inventory.inventoryCode")
     OrderDetailRes toOrderDetailRes(OrderDetail orderDetail);
 
     @Mapping(target = "total",    source = "total")

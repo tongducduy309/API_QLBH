@@ -33,8 +33,8 @@ public class PurchaseReceiptDetailRes {
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime createdAt;
 
-    private Long inventoryLotId;
-    private String inventoryLotCode;
+    private Long inventoryId;
+    private String inventoryCode;
     private Double inventoryOriginalQty;
     private Double inventoryRemainingQty;
     private Double inventoryCostPrice;

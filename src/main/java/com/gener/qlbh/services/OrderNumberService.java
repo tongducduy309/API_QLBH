@@ -42,7 +42,7 @@ public class OrderNumberService {
     @Transactional
     public String getNextOrderCode(){
         String period = LocalDate.now().format(PERIOD_FMT);
-        Long val = repo.findNextVal(period);
+        Long val = repo.findNextVal(period)+1;
         String six = String.format("%06d", val);
         return period + "-" + six;
     }

@@ -1,6 +1,7 @@
 package com.gener.qlbh.dtos.response;
 
 import com.gener.qlbh.enums.OrderDetailKind;
+import com.gener.qlbh.models.Customer;
 import jakarta.persistence.Column;
 import lombok.*;
 
@@ -12,6 +13,7 @@ import lombok.*;
 public class OrderDetailRes {
     private Long id;
     private Double length;
+    private Customer customer;
     private Double quantity;
     private Double price;
     private Double totalQuantity;//
@@ -22,4 +24,5 @@ public class OrderDetailRes {
     private String baseUnit;
     private Long inventoryId;
     private OrderDetailKind kind;
+    private String inventoryCode;
 }

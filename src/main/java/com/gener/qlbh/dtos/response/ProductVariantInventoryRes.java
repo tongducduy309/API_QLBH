@@ -10,7 +10,8 @@ import lombok.*;
 public class ProductVariantInventoryRes {
     private Long inventoryId;
     private String sku;
-    private String lotCode;
+    private String productName;
+    private String inventoryCode;
     private Double originalQty;
     private boolean outOfStock;
     private Long variantId;

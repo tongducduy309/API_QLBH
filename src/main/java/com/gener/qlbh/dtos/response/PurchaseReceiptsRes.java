@@ -27,4 +27,5 @@ public class PurchaseReceiptsRes {
     private String note;
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime createdAt;
+    private String inventoryCode;
 }

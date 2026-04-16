@@ -14,8 +14,6 @@ public class CustomerUpdateReq {
 
     private String email;
 
-    private String company;
-
     private String taxCode;
 
     private String address;

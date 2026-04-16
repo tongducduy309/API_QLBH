@@ -1,6 +1,7 @@
 package com.gener.qlbh.repositories;
 
 import com.gener.qlbh.dtos.response.AnalysisRes;
+import com.gener.qlbh.dtos.response.CustomerDetailRes;
 import com.gener.qlbh.dtos.response.RevenueBucketRes;
 import com.gener.qlbh.models.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,6 +18,13 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByCustomer_IdAndRemainingAmountGreaterThanOrderByCreatedAtDesc(
             Long customerId, double remainingAmount
     );
+
+    @Query("""
+    SELECT COALESCE(SUM(o.remainingAmount), 0)
+    FROM Order o
+    WHERE o.customer.id = :customerId
+""")
+    Double getDebtByCustomerId(@Param("customerId") Long customerId);
 
     @Query(value = """
     SELECT *

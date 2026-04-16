@@ -38,7 +38,7 @@ public class UserService {
         var context = SecurityContextHolder.getContext();
         String name =  context.getAuthentication().getName();
         User user = userRepository.findByUsername(name).orElseThrow(()->
-                new APIException(ErrorCode.USER_NOT_EXISTS));
+                new APIException(ErrorCode.USER_NOT_FOUND));
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
                         .status(SuccessCode.REQUEST.getStatus())

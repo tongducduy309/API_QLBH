@@ -46,11 +46,8 @@ public class ProductService {
 
     @Transactional
     public ResponseEntity<ResponseObject> getProductById(Long id) throws APIException {
-        Product product = productRepository.findById(id).orElseThrow(()-> APIException.builder()
-                .status(ErrorCode.NOT_FOUND.getStatus())
-                .message("Cannot Found Product With Id = "+id)
-                .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                .build());
+        Product product = productRepository.findById(id).orElseThrow(
+                ()-> new APIException(ErrorCode.PRODUCT_NOT_FOUND));
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
                         .status(SuccessCode.REQUEST.getStatus())
@@ -97,7 +94,7 @@ public class ProductService {
     }
 
     @Transactional
-    public ResponseEntity<ResponseObject> deleteProduct(Long id){
+    public ResponseEntity<ResponseObject> deleteProduct(Long id) throws APIException {
         Optional<Product> product = productRepository.findById(id);
         if (product.isPresent()){
             productRepository.deleteById(id);
@@ -112,12 +109,8 @@ public class ProductService {
     @Transactional
     public ResponseEntity<ResponseObject> updateProduct(Long id, ProductUpdateReq req) throws APIException {
 
-        Product product = productRepository.findById(id)
-                .orElseThrow(() -> APIException.builder()
-                        .status(ErrorCode.NOT_FOUND.getStatus())
-                        .message("Cannot Found Product With Id = " + id)
-                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                        .build());
+        Product product = productRepository.findById(id).orElseThrow(
+                ()-> new APIException(ErrorCode.PRODUCT_NOT_FOUND));
 
 //        Category category = categoryRepository.findById(req.getCategoryId())
 //                .orElseThrow(() -> APIException.builder()
@@ -156,11 +149,7 @@ public class ProductService {
                     product.getVariants().add(v);
                 } else {
                     ProductVariant v = current.get(vreq.getId());
-                    if (v == null) throw APIException.builder()
-                            .status(ErrorCode.NOT_FOUND.getStatus())
-                            .message("Cannot Found Variant With Id = "+vreq.getId())
-                            .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                            .build();
+                    if (v == null) throw new APIException(ErrorCode.VARIANT_NOT_FOUND);
                     v.setVariantCode(vreq.getVariantCode());
                     v.setWeight(vreq.getWeight());
                     v.setSku(vreq.getSku());
@@ -181,11 +170,7 @@ public class ProductService {
                 .toList();
 
         if (!deleteIds.isEmpty() && orderDetailRepository.existsByProductVariant_IdIn(deleteIds)) {
-            throw APIException.builder()
-                    .status(ErrorCode.BAD_REQUEST.getStatus())
-                    .message("Cannot delete product variants because they are used in order details: " + deleteIds)
-                    .httpStatusCode(ErrorCode.BAD_REQUEST.getHttpStatusCode())
-                    .build();
+            throw new APIException(ErrorCode.VARIANT_IN_USE);
         }
 
         // remove khỏi collection => orphanRemoval ở Product-Variant sẽ delete variant
@@ -199,11 +184,8 @@ public class ProductService {
 
     @Transactional
     public ResponseEntity<ResponseObject> updateWishlish(Long id, ProductWishlistUpdateReq req) throws APIException {
-        Product product = productRepository.findById(id).orElseThrow(()-> APIException.builder()
-                .status(ErrorCode.NOT_FOUND.getStatus())
-                .message("Cannot Found Product With Id = "+id)
-                .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                .build());
+        Product product = productRepository.findById(id).orElseThrow(
+                ()-> new APIException(ErrorCode.PRODUCT_NOT_FOUND));
 //        product.setWishlist(req.isWishlist());
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 new ResponseObject(SuccessCode.REQUEST.getStatus(), "Update Wishlist Of Product Successfully",productRepository.save(product))

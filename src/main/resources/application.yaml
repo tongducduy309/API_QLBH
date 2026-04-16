@@ -32,6 +32,17 @@ spring:
     properties:
       hibernate.format_sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 neon:
   datasource:
     url: ${NEON_DB_URL:jdbc:postgresql://ep-blue-snow-adnaddk9-pooler.c-2.us-east-1.aws.neon.tech:5432/neondb?sslmode=require}

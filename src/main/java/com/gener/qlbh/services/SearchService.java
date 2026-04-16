@@ -1,12 +1,8 @@
 package com.gener.qlbh.services;
 
 import com.gener.qlbh.dtos.response.SearchSuggestionRes;
-import com.gener.qlbh.models.Customer;
-import com.gener.qlbh.models.InventoryLot;
-import com.gener.qlbh.models.Order;
-import com.gener.qlbh.models.Product;
-import com.gener.qlbh.models.ProductVariant;
-import com.gener.qlbh.models.PurchaseReceipts;
+import com.gener.qlbh.models.*;
+import com.gener.qlbh.models.Inventory;
 import com.gener.qlbh.repositories.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,7 +10,6 @@ import org.springframework.stereotype.Service;
 import java.text.NumberFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -101,9 +96,9 @@ public class SearchService {
 
         inventoryLotRepository.findAll().stream()
                 .filter(i -> containsAny(q,
-                        i.getLotCode()
+                        i.getInventoryCode()
                 ))
-                .map(InventoryLot::getVariant)
+                .map(Inventory::getVariant)
                 .filter(Objects::nonNull)
                 .forEach(p -> foundVariants.put(p.getId(), p));
 
@@ -114,11 +109,11 @@ public class SearchService {
     }
 
     private List<SearchSuggestionRes> searchInventories(String q) {
-        Map<Long, InventoryLot> foundInventories = new LinkedHashMap<>();
+        Map<Long, Inventory> foundInventories = new LinkedHashMap<>();
 
         inventoryLotRepository.findAll().stream()
                 .filter(i -> containsAny(q,
-                        i.getLotCode()
+                        i.getInventoryCode()
                 ))
                 .forEach(p -> foundInventories.put(p.getId(), p));
 
@@ -188,13 +183,13 @@ public class SearchService {
                 .build();
     }
 
-    private SearchSuggestionRes mapInventory(InventoryLot p) {
+    private SearchSuggestionRes mapInventory(Inventory p) {
         return SearchSuggestionRes.builder()
                 .entityId(String.valueOf(p.getVariant().getProduct().getId()))
                 .entityType("PRODUCT")
                 .entityLabel("Tồn kho")
                 .title(p.getVariant().getProduct().getName() + (p.getVariant().getSku()!=null&&!p.getVariant().getSku().isEmpty()?("("+p.getVariant().getSku()+")"):""))
-                .subtitle(p.getLotCode())
+                .subtitle(p.getInventoryCode())
 //                .meta(p.getWarningQuantity() != null ? "Cảnh báo tồn: " + trimNumber(p.getWarningQuantity()) : null)
                 .build();
     }

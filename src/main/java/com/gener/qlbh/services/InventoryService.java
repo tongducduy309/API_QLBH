@@ -1,5 +1,6 @@
 package com.gener.qlbh.services;
 
+import com.gener.qlbh.dtos.request.InventoryUpdateReq;
 import com.gener.qlbh.dtos.request.OrderDetailCreateReq;
 import com.gener.qlbh.dtos.request.OrderCreateReq;
 import com.gener.qlbh.dtos.response.ProductInventoryRes;
@@ -14,12 +15,13 @@ import com.gener.qlbh.repositories.InventoryRepository;
 import com.gener.qlbh.repositories.ProductRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,20 +32,20 @@ public class InventoryService {
     private final OrderMapper orderMapper;
     private final ProductMapper productMapper;
 
-    public ResponseEntity<ResponseObject> getAllInventory(boolean status){
+    public ResponseEntity<ResponseObject> getAllInventory(){
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
                         .status(SuccessCode.REQUEST.getStatus())
                         .message("Get All Inventory Successfully")
-                        .data(productMapper.toProductInventoryRes(productRepository.findAllWithVariantsAndInventories(status)))
+                        .data(productMapper.toProductInventoryRes(productRepository.findAllWithVariantsAndInventories()))
                         .build()
         );
 
     }
 
     @Transactional
-    public List<ProductInventoryRes> listInventoryRows(boolean status) {
-        return productMapper.toProductInventoryRes(productRepository.findAllWithVariantsAndInventories(status));
+    public List<ProductInventoryRes> listInventoryRows() {
+        return productMapper.toProductInventoryRes(productRepository.findAllWithVariantsAndInventories());
     }
 
     @Transactional
@@ -52,11 +54,7 @@ public class InventoryService {
         for (OrderDetailCreateReq orderDetailCreateReq : orderCreateReq.getOrderDetailCreateReqs()){
 
             if(orderDetailCreateReq.getProductVariantId()!=null){
-                Product product = productRepository.findById(orderDetailCreateReq.getProductVariantId()).orElseThrow(()-> APIException.builder()
-                        .status(ErrorCode.NOT_FOUND.getStatus())
-                        .message("Cannot Found Product With Id = "+ orderDetailCreateReq.getProductVariantId())
-                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                        .build());
+                Product product = productRepository.findById(orderDetailCreateReq.getProductVariantId()).orElseThrow(()-> new APIException(ErrorCode.PRODUCT_NOT_FOUND));
                 OrderDetail orderDetail = orderMapper.toOrderDetail(orderDetailCreateReq);
                 Double totalLength = orderDetail.getTotalQuantity();
 //                Inventory inventory = product.getInventory();
@@ -80,15 +78,48 @@ public class InventoryService {
     }
 
     @Transactional
-    public ResponseEntity<ResponseObject> deleteInventory(Long id){
-        Optional<InventoryLot> inventory = inventoryRepository.findById(id);
-        if (inventory.isPresent()){
+    public ResponseEntity<ResponseObject> deleteInventory(Long id) throws APIException {
+        Inventory inventory = inventoryRepository.findById(id).orElseThrow(
+                ()-> new APIException(ErrorCode.INVENTORY_NOT_FOUND));
+        inventory.setActive(false);
 
-            inventoryRepository.deleteById(id);
-
-        }
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
-                new ResponseObject(SuccessCode.REQUEST.getStatus(), "Delete Inventory Successfully","")
+                new ResponseObject(SuccessCode.REQUEST.getStatus(), "Delete Inventory Successfully",inventoryRepository.save(inventory))
         );
     }
+
+    @Transactional
+    public ResponseEntity<ResponseObject> updateInventory(Long id, InventoryUpdateReq req) throws APIException {
+        Inventory inventory = inventoryRepository.findById(id).orElseThrow(
+                ()-> new APIException(ErrorCode.INVENTORY_NOT_FOUND));
+
+        inventory.setRemainingQty(req.getRemainingQty());
+        if (inventoryRepository.existsByInventoryCode(req.getInventoryCode())){
+            throw new APIException(ErrorCode.CONFLICT);
+        }
+        inventory.setInventoryCode(req.getInventoryCode());
+        inventory.setCostPrice(req.getCostPrice());
+        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
+                new ResponseObject(SuccessCode.REQUEST.getStatus(), "Update Inventory Successfully",inventoryRepository.save(inventory))
+        );
+    }
+
+//    @Transactional
+//    public ResponseEntity<ResponseObject> checkLotCode(String lotCode) throws APIException {
+//        List<Inventory> inventory = inventoryRepository.findBylotCode(id).orElseThrow(
+//                ()-> APIException.builder()
+//                        .status(ErrorCode.NOT_FOUND.getStatus())
+//                        .message("Cannot Found Inventory With Id = "+ id)
+//                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
+//                        .build());
+//
+//        inventory.setRemainingQty(req.getRemainingQty());
+//        inventory.setLotCode(req.getLotCode());
+//        inventory.setCostPrice(req.getCostPrice());
+//        return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
+//                new ResponseObject(SuccessCode.REQUEST.getStatus(), "Update Inventory Successfully",inventoryRepository.save(inventory))
+//        );
+//    }
+
+
 }

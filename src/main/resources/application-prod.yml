@@ -1,0 +1,18 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: jdbc:sqlite:${user.home}/.qlbh/database.db
+    driver-class-name: org.sqlite.JDBC
+
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    show-sql: false
+    open-in-view: true
+
+  hikari:
+    maximum-pool-size: 1
+    minimum-idle: 1
+    pool-name: sqlite-pool

@@ -7,7 +7,7 @@ import com.gener.qlbh.enums.PurchaseReceiptMethod;
 import com.gener.qlbh.enums.SuccessCode;
 import com.gener.qlbh.exception.APIException;
 import com.gener.qlbh.mapper.PurchaseReceiptsMapper;
-import com.gener.qlbh.models.InventoryLot;
+import com.gener.qlbh.models.Inventory;
 import com.gener.qlbh.models.Product;
 import com.gener.qlbh.models.ProductVariant;
 import com.gener.qlbh.models.PurchaseReceipts;
@@ -32,6 +32,7 @@ public class PurchaseReceiptsService {
     private final PurchaseReceiptsMapper purchaseReceiptsMapper;
     private final InventoryRepository inventoryRepository;
     private final ProductVariantRepository productVariantRepository;
+    private final InventoryCodeGeneratorService inventoryCodeGeneratorService;
 
     @Transactional
     public ResponseEntity<ResponseObject> getAllPurchaseReceipts() {
@@ -61,36 +62,10 @@ public class PurchaseReceiptsService {
 
     @Transactional
     public ResponseEntity<ResponseObject> createPurchaseReceipts(PurchaseReceiptsCreateReq req) throws APIException {
-        if (req.getProductVariantId() == null) {
-            throw APIException.builder()
-                    .status(ErrorCode.BAD_REQUEST.getStatus())
-                    .message("ProductVariantId is required")
-                    .httpStatusCode(ErrorCode.BAD_REQUEST.getHttpStatusCode())
-                    .build();
-        }
-
-        if (req.getTotalQuantity() == null || req.getTotalQuantity() <= 0) {
-            throw APIException.builder()
-                    .status(ErrorCode.BAD_REQUEST.getStatus())
-                    .message("Total quantity must be greater than 0")
-                    .httpStatusCode(ErrorCode.BAD_REQUEST.getHttpStatusCode())
-                    .build();
-        }
-
-        if (req.getCost() == null || req.getCost() < 0) {
-            throw APIException.builder()
-                    .status(ErrorCode.BAD_REQUEST.getStatus())
-                    .message("Cost must be greater than or equal to 0")
-                    .httpStatusCode(ErrorCode.BAD_REQUEST.getHttpStatusCode())
-                    .build();
-        }
+        validateCreateRequest(req);
 
         ProductVariant productVariant = productVariantRepository.findById(req.getProductVariantId())
-                .orElseThrow(() -> APIException.builder()
-                        .status(ErrorCode.NOT_FOUND.getStatus())
-                        .message("Cannot Found Product Variant With Id = " + req.getProductVariantId())
-                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                        .build());
+                .orElseThrow(() -> new APIException(ErrorCode.VARIANT_NOT_FOUND));
 
         PurchaseReceiptMethod method = Optional.ofNullable(req.getPurchaseReceiptMethod())
                 .orElse(PurchaseReceiptMethod.SEPARATE);
@@ -99,46 +74,11 @@ public class PurchaseReceiptsService {
         purchaseReceipts.setVariant(productVariant);
         purchaseReceipts.setPurchaseReceiptMethod(method);
 
-        InventoryLot inventoryLot;
+        Inventory inventory = buildInventory(req, productVariant, method);
 
-        if (method == PurchaseReceiptMethod.ADDITIVE) {
-            inventoryLot = inventoryRepository.findByVariantId(req.getProductVariantId());
+        inventory = inventoryRepository.save(inventory);
 
-            if (inventoryLot == null) {
-                inventoryLot = InventoryLot.builder()
-                        .variant(productVariant)
-                        .originalQty(req.getTotalQuantity())
-                        .remainingQty(req.getTotalQuantity())
-                        .costPrice(req.getCost())
-                        .importedAt(LocalDateTime.now())
-                        .build();
-            } else {
-                Double currentOriginalQty = inventoryLot.getOriginalQty() == null ? 0D : inventoryLot.getOriginalQty();
-                Double currentRemainingQty = inventoryLot.getRemainingQty() == null ? 0D : inventoryLot.getRemainingQty();
-
-                inventoryLot.setOriginalQty(currentOriginalQty + req.getTotalQuantity());
-                inventoryLot.setRemainingQty(currentRemainingQty + req.getTotalQuantity());
-                inventoryLot.setCostPrice(req.getCost());
-                inventoryLot.setLotCode(req.getLotCode());
-
-                if (inventoryLot.getImportedAt() == null) {
-                    inventoryLot.setImportedAt(LocalDateTime.now());
-                }
-            }
-        } else {
-            inventoryLot = InventoryLot.builder()
-                    .variant(productVariant)
-                    .originalQty(req.getTotalQuantity())
-                    .remainingQty(req.getTotalQuantity())
-                    .costPrice(req.getCost())
-                    .importedAt(LocalDateTime.now())
-                    .lotCode(req.getLotCode())
-                    .build();
-        }
-
-        inventoryLot = inventoryRepository.save(inventoryLot);
-
-        purchaseReceipts.setInventory(inventoryLot);
+        purchaseReceipts.setInventory(inventory);
 
         PurchaseReceipts savedReceipt = purchaseReceiptsRepository.save(purchaseReceipts);
 
@@ -154,45 +94,25 @@ public class PurchaseReceiptsService {
     @Transactional
     public ResponseEntity<ResponseObject> deletePurchaseReceipts(Long id) throws APIException {
         PurchaseReceipts receipt = purchaseReceiptsRepository.findById(id)
-                .orElseThrow(() -> APIException.builder()
-                        .status(ErrorCode.NOT_FOUND.getStatus())
-                        .message("Cannot Found PurchaseReceipt With Id = " + id)
-                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                        .build());
+                .orElseThrow(() -> new APIException(ErrorCode.PURCHASE_RECEIPT_NOT_FOUND));
 
         if (receipt.getTotalQuantity() == null || receipt.getTotalQuantity() <= 0) {
-            throw APIException.builder()
-                    .status(ErrorCode.BAD_REQUEST.getStatus())
-                    .message("Invalid receipt quantity")
-                    .httpStatusCode(ErrorCode.BAD_REQUEST.getHttpStatusCode())
-                    .build();
+            throw new APIException(ErrorCode.PURCHASE_RECEIPT_QUANTITY_INVALID);
         }
 
         if (receipt.getInventory() == null || receipt.getInventory().getId() == null) {
-            throw APIException.builder()
-                    .status(ErrorCode.BAD_REQUEST.getStatus())
-                    .message("PurchaseReceipt has no inventory linked")
-                    .httpStatusCode(ErrorCode.BAD_REQUEST.getHttpStatusCode())
-                    .build();
+            throw new APIException(ErrorCode.PURCHASE_RECEIPT_INVENTORY_NOT_FOUND);
         }
 
-        InventoryLot inventoryLot = inventoryRepository.findById(receipt.getInventory().getId())
-                .orElseThrow(() -> APIException.builder()
-                        .status(ErrorCode.NOT_FOUND.getStatus())
-                        .message("Cannot Found Inventory With Id = " + receipt.getInventory().getId())
-                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                        .build());
+        Inventory inventory = inventoryRepository.findById(receipt.getInventory().getId())
+                .orElseThrow(() -> new APIException(ErrorCode.INVENTORY_NOT_FOUND));
 
         Double qty = receipt.getTotalQuantity();
-        Double currentOriginalQty = inventoryLot.getOriginalQty() == null ? 0D : inventoryLot.getOriginalQty();
-        Double currentRemainingQty = inventoryLot.getRemainingQty() == null ? 0D : inventoryLot.getRemainingQty();
+        Double currentOriginalQty = inventory.getOriginalQty() == null ? 0D : inventory.getOriginalQty();
+        Double currentRemainingQty = inventory.getRemainingQty() == null ? 0D : inventory.getRemainingQty();
 
         if (currentRemainingQty < qty) {
-            throw APIException.builder()
-                    .status(ErrorCode.BAD_REQUEST.getStatus())
-                    .message("Cannot delete receipt because current stock is smaller than receipt quantity")
-                    .httpStatusCode(ErrorCode.BAD_REQUEST.getHttpStatusCode())
-                    .build();
+            throw new APIException(ErrorCode.PURCHASE_RECEIPT_DELETE_STOCK_NOT_ENOUGH);
         }
 
         double newOriginalQty = currentOriginalQty - qty;
@@ -201,11 +121,11 @@ public class PurchaseReceiptsService {
         purchaseReceiptsRepository.delete(receipt);
 
         if (newOriginalQty <= 0 && newRemainingQty <= 0) {
-            inventoryRepository.delete(inventoryLot);
+            inventoryRepository.delete(inventory);
         } else {
-            inventoryLot.setOriginalQty(Math.max(newOriginalQty, 0D));
-            inventoryLot.setRemainingQty(Math.max(newRemainingQty, 0D));
-            inventoryRepository.save(inventoryLot);
+            inventory.setOriginalQty(Math.max(newOriginalQty, 0D));
+            inventory.setRemainingQty(Math.max(newRemainingQty, 0D));
+            inventoryRepository.save(inventory);
         }
 
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
@@ -220,15 +140,11 @@ public class PurchaseReceiptsService {
     @Transactional
     public ResponseEntity<ResponseObject> getPurchaseReceiptDetail(Long id) throws APIException {
         PurchaseReceipts receipt = purchaseReceiptsRepository.findById(id)
-                .orElseThrow(() -> APIException.builder()
-                        .status(ErrorCode.NOT_FOUND.getStatus())
-                        .message("Cannot Found PurchaseReceipt With Id = " + id)
-                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                        .build());
+                .orElseThrow(() -> new APIException(ErrorCode.PURCHASE_RECEIPT_NOT_FOUND));
 
         ProductVariant variant = receipt.getVariant();
         Product product = variant != null ? variant.getProduct() : null;
-        InventoryLot inventoryLot = receipt.getInventory();
+        Inventory inventory = receipt.getInventory();
 
         PurchaseReceiptDetailRes data = PurchaseReceiptDetailRes.builder()
                 .id(receipt.getId())
@@ -249,13 +165,13 @@ public class PurchaseReceiptsService {
                 .note(receipt.getNote())
                 .createdAt(receipt.getCreatedAt())
 
-                .inventoryLotId(inventoryLot != null ? inventoryLot.getId() : null)
-                .inventoryLotCode(inventoryLot != null ? inventoryLot.getLotCode() : null)
-                .inventoryOriginalQty(inventoryLot != null ? inventoryLot.getOriginalQty() : null)
-                .inventoryRemainingQty(inventoryLot != null ? inventoryLot.getRemainingQty() : null)
-                .inventoryCostPrice(inventoryLot != null ? inventoryLot.getCostPrice() : null)
-                .inventoryImportedAt(inventoryLot != null ? inventoryLot.getImportedAt() : null)
-                .inventoryActive(inventoryLot != null ? inventoryLot.getActive() : null)
+                .inventoryId(inventory != null ? inventory.getId() : null)
+                .inventoryCode(inventory != null ? inventory.getInventoryCode() : null)
+                .inventoryOriginalQty(inventory != null ? inventory.getOriginalQty() : null)
+                .inventoryRemainingQty(inventory != null ? inventory.getRemainingQty() : null)
+                .inventoryCostPrice(inventory != null ? inventory.getCostPrice() : null)
+                .inventoryImportedAt(inventory != null ? inventory.getImportedAt() : null)
+                .inventoryActive(inventory != null ? inventory.getActive() : null)
                 .build();
 
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
@@ -267,5 +183,83 @@ public class PurchaseReceiptsService {
         );
     }
 
+    private void validateCreateRequest(PurchaseReceiptsCreateReq req) throws APIException {
+        if (req.getProductVariantId() == null) {
+            throw new APIException(ErrorCode.PRODUCT_VARIANT_ID_REQUIRED);
+        }
 
+        if (req.getTotalQuantity() == null || req.getTotalQuantity() <= 0) {
+            throw new APIException(ErrorCode.PURCHASE_RECEIPT_TOTAL_QUANTITY_INVALID);
+        }
+
+        if (req.getCost() == null || req.getCost() < 0) {
+            throw new APIException(ErrorCode.PURCHASE_RECEIPT_COST_INVALID);
+        }
+    }
+
+    private Inventory buildInventory(
+            PurchaseReceiptsCreateReq req,
+            ProductVariant productVariant,
+            PurchaseReceiptMethod method
+    ) throws APIException {
+        Inventory inventory;
+
+        if (method == PurchaseReceiptMethod.ADDITIVE) {
+            inventory = inventoryRepository.findByVariantId(req.getProductVariantId());
+
+            if (inventory == null) {
+                inventory = Inventory.builder()
+                        .variant(productVariant)
+                        .originalQty(req.getTotalQuantity())
+                        .remainingQty(req.getTotalQuantity())
+                        .costPrice(req.getCost())
+                        .importedAt(LocalDateTime.now())
+                        .build();
+            } else {
+                Double currentOriginalQty = inventory.getOriginalQty() == null ? 0D : inventory.getOriginalQty();
+                Double currentRemainingQty = inventory.getRemainingQty() == null ? 0D : inventory.getRemainingQty();
+
+                inventory.setOriginalQty(currentOriginalQty + req.getTotalQuantity());
+                inventory.setRemainingQty(currentRemainingQty + req.getTotalQuantity());
+                inventory.setCostPrice(req.getCost());
+
+                if (inventory.getImportedAt() == null) {
+                    inventory.setImportedAt(LocalDateTime.now());
+                }
+            }
+        } else {
+            inventory = Inventory.builder()
+                    .variant(productVariant)
+                    .originalQty(req.getTotalQuantity())
+                    .remainingQty(req.getTotalQuantity())
+                    .costPrice(req.getCost())
+                    .importedAt(LocalDateTime.now())
+                    .build();
+        }
+
+        applyInventoryCode(req, inventory);
+        return inventory;
+    }
+
+    private void applyInventoryCode(PurchaseReceiptsCreateReq req, Inventory inventory) throws APIException {
+        String requestInventoryCode = req.getInventoryCode();
+
+        if (requestInventoryCode == null || requestInventoryCode.isBlank()) {
+            if (inventory.getInventoryCode() == null || inventory.getInventoryCode().isBlank()) {
+                inventory.setInventoryCode(inventoryCodeGeneratorService.generateNextCode());
+            }
+            return;
+        }
+
+        if (inventory.getId() != null && requestInventoryCode.equals(inventory.getInventoryCode())) {
+            inventory.setInventoryCode(requestInventoryCode);
+            return;
+        }
+
+        if (inventoryRepository.existsByInventoryCode(requestInventoryCode)) {
+            throw new APIException(ErrorCode.INVENTORY_CODE_ALREADY_EXISTS);
+        }
+
+        inventory.setInventoryCode(requestInventoryCode);
+    }
 }

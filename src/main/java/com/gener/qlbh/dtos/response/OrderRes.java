@@ -33,7 +33,7 @@ public class OrderRes {
     private Double total;
     private Set<OrderDetailRes> details;
 
-    @JsonFormat(pattern = "dd-MM-yyyy")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate createdAt;
 
     private OrderStatus status;

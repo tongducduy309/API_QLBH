@@ -6,17 +6,21 @@ import com.gener.qlbh.dtos.request.ProductWishlistUpdateReq;
 import com.gener.qlbh.exception.APIException;
 import com.gener.qlbh.models.Product;
 import com.gener.qlbh.models.ResponseObject;
+import com.gener.qlbh.services.ProductExcelService;
 import com.gener.qlbh.services.ProductService;
 import com.gener.qlbh.services.ProductVariantService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping(path = "/api/v1/products")
 @RequiredArgsConstructor
 public class ProductController {
     private final ProductService productService;
+    private final ProductExcelService productExcelService;
 
     @GetMapping
     ResponseEntity<ResponseObject> getAllProducts(){
@@ -35,7 +39,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    ResponseEntity<ResponseObject> deleteProduct(@PathVariable Long id){
+    ResponseEntity<ResponseObject> deleteProduct(@PathVariable Long id) throws APIException {
         return productService.deleteProduct(id);
     }
 
@@ -47,5 +51,10 @@ public class ProductController {
     @PutMapping("wishlist/{id}")
     ResponseEntity<ResponseObject> updateWishlistProduct(@PathVariable Long id, @RequestBody ProductWishlistUpdateReq req) throws APIException {
         return productService.updateWishlish(id,req);
+    }
+
+    @PostMapping(value = "/excel/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity importProductExcel(@RequestPart("file") MultipartFile file) throws APIException {
+        return productExcelService.importProductExcel(file);
     }
 }

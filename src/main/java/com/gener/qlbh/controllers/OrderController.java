@@ -3,16 +3,20 @@ package com.gener.qlbh.controllers;
 import com.gener.qlbh.dtos.request.*;
 import com.gener.qlbh.exception.APIException;
 import com.gener.qlbh.models.ResponseObject;
+import com.gener.qlbh.services.InvoiceEmailService;
 import com.gener.qlbh.services.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping(path = "/api/v1/orders")
 @RequiredArgsConstructor
 public class OrderController {
     private final OrderService orderService;
+    private final InvoiceEmailService invoiceEmailService;
 
     @GetMapping
     ResponseEntity<ResponseObject> getAllOrders(){
@@ -57,5 +61,23 @@ public class OrderController {
     @GetMapping("/recent")
     ResponseEntity<ResponseObject> getNextOrderCode(@RequestParam Long amount){
         return orderService.getOrdersRecent(amount);
+    }
+
+    @PostMapping(
+            value = "/{id}/send-email",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    ResponseEntity<ResponseObject> sendInvoiceEmail(
+            @PathVariable Long id,
+            @RequestPart("to") String to,
+            @RequestPart(value = "subject", required = false) String subject,
+            @RequestPart(value = "content", required = false) String content,
+            @RequestPart("pdfFile") MultipartFile pdfFile
+    ) throws APIException {
+        SendInvoiceEmailReq req = new SendInvoiceEmailReq();
+        req.setTo(to);
+        req.setSubject(subject);
+        req.setContent(content);
+        return invoiceEmailService.sendInvoiceEmail(id, req, pdfFile);
     }
 }

@@ -11,13 +11,16 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "inventory")
+@Table(name = "inventory",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_inventory_code", columnNames = "inventory_code")
+        })
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Builder
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-public class InventoryLot {
+public class Inventory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,8 +30,8 @@ public class InventoryLot {
     @JsonBackReference
     private ProductVariant variant;
 
-    @Column( unique = true)
-    private String lotCode;
+    @Column(name = "inventory_code", nullable = false, unique = true, length = 20)
+    private String inventoryCode;
 
     @Column(nullable = false)
     private Double originalQty;

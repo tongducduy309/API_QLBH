@@ -1,6 +1,7 @@
 package com.gener.qlbh.controllers;
 
 import com.gener.qlbh.dtos.request.InventoryExcelExportReq;
+import com.gener.qlbh.dtos.request.InventoryUpdateReq;
 import com.gener.qlbh.dtos.request.OrderCreateReq;
 import com.gener.qlbh.exception.APIException;
 import com.gener.qlbh.models.ResponseObject;
@@ -20,8 +21,8 @@ public class InventoryController {
     private final InventoryService inventoryService;
     private final InventoryExcelService inventoryExcelService;
     @GetMapping
-    ResponseEntity<ResponseObject> getAllInventory(@RequestParam boolean status){
-        return inventoryService.getAllInventory(status);
+    ResponseEntity<ResponseObject> getAllInventory(){
+        return inventoryService.getAllInventory();
     }
 
     @PostMapping("/available")
@@ -30,14 +31,19 @@ public class InventoryController {
     }
 
     @DeleteMapping("/{id}")
-    ResponseEntity<ResponseObject> deleteInventory(@PathVariable Long id){
+    ResponseEntity<ResponseObject> deleteInventory(@PathVariable Long id) throws APIException {
         return inventoryService.deleteInventory(id);
+    }
+
+    @PutMapping("/{id}")
+    ResponseEntity<ResponseObject> updateInventory(@PathVariable Long id, @RequestBody InventoryUpdateReq req) throws APIException {
+        return inventoryService.updateInventory(id, req);
     }
 
     @PostMapping("/excel/export")
     public ResponseEntity<byte[]> exportInventoryExcel(@RequestBody InventoryExcelExportReq req) throws Exception {
         byte[] file = inventoryExcelService.exportInventoryExcel(
-                inventoryService.listInventoryRows(req.getOnlyActive() == null || req.getOnlyActive()),
+                inventoryService.listInventoryRows(),
                 req
         );
 

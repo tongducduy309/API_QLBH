@@ -11,7 +11,7 @@ import lombok.*;
 @Setter
 @Builder
 public class PurchaseReceiptsCreateReq {
-    private String lotCode;
+    private String inventoryCode;
     private Long productVariantId;
     private PurchaseReceiptMethod purchaseReceiptMethod;
     private Double totalQuantity;

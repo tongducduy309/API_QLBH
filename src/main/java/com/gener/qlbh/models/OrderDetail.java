@@ -6,7 +6,6 @@ import com.gener.qlbh.enums.OrderDetailKind;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.hibernate.Hibernate;
 
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
@@ -31,7 +30,7 @@ public class OrderDetail {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inventory_id")
-    private InventoryLot inventory;
+    private Inventory inventory;
 
     private Double price;
     private Double length;

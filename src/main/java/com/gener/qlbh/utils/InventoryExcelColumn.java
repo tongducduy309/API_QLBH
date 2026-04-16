@@ -24,7 +24,7 @@ public enum InventoryExcelColumn {
     STORE_PRICE("storePrice", "Giá bán buôn", false),
     VARIANT_ACTIVE("variantActive", "Biến thể đang bán", false),
 
-    LOT_CODE("lotCode", "Mã lô", false),
+    INVENTORY_CODE("inventoryCode", "Mã kho", false),
     ORIGINAL_QTY("originalQty", "SL ban đầu", false),
     REMAINING_QTY("remainingQty", "SL tồn", false),
     COST_PRICE("costPrice", "Giá vốn", false),
@@ -56,7 +56,7 @@ public enum InventoryExcelColumn {
         if (!ordered.contains(PRODUCT_NAME)) ordered.add(PRODUCT_NAME);
         if (!ordered.contains(SKU)) ordered.add(SKU);
         if (!ordered.contains(VARIANT_CODE)) ordered.add(VARIANT_CODE);
-        if (!ordered.contains(LOT_CODE)) ordered.add(LOT_CODE);
+        if (!ordered.contains(INVENTORY_CODE)) ordered.add(INVENTORY_CODE);
 
         return new ArrayList<>(ordered);
     }

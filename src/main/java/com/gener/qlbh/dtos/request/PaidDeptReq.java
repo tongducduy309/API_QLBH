@@ -9,6 +9,6 @@ import lombok.*;
 @Builder
 public class PaidDeptReq {
     private Long orderId;
-    private Double paidDept;
+    private Double amount;
 
 }

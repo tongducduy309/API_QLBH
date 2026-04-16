@@ -1,6 +1,6 @@
 package com.gener.qlbh.repositories;
 
-import com.gener.qlbh.models.InventoryLot;
+import com.gener.qlbh.models.Inventory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,29 +9,17 @@ import java.util.List;
 import java.util.Optional;
 
 
-public interface InventoryRepository extends JpaRepository<InventoryLot,Long> {
-    InventoryLot findByVariantId(Long id);
-    Optional<InventoryLot> findActiveByVariantId(Long id);
+public interface InventoryRepository extends JpaRepository<Inventory,Long> {
+    Inventory findByVariantId(Long id);
+
+    Optional<Inventory> findFirstByVariant_IdAndInventoryCode(Long productVariantId, String inventoryCode);
+
+    boolean existsByInventoryCode(String inventoryCode);
 
     @Query("""
-        SELECT i
-        FROM InventoryLot i
-        JOIN FETCH i.variant v
-        JOIN FETCH v.product p
-        WHERE v.active = true
-          AND p.active = true AND i.active = true
+        select max(i.inventoryCode)
+        from Inventory i
+        where i.inventoryCode like concat(:prefix, '%')
     """)
-    List<InventoryLot> findAllActiveVariantAndProduct(@Param("status") boolean status);
-
-    @Query("""
-    select l
-    from InventoryLot l
-    where l.variant.id = :variantId
-      and l.remainingQty > 0
-      and l.active = true
-    order by l.remainingQty asc
-""")
-    List<InventoryLot> findAvailableLots(@Param("variantId") Long variantId);
-
-    Optional<InventoryLot> findFirstByVariant_IdAndLotCode(Long productVariantId, String lotCode);
+    Optional<String> findMaxInventoryCodeByPrefix(@Param("prefix") String prefix);
 }

@@ -4,8 +4,7 @@ import com.gener.qlbh.dtos.request.InventoryExcelExportReq;
 import com.gener.qlbh.dtos.response.InventoryExcelImportRes;
 import com.gener.qlbh.dtos.response.ProductInventoryRes;
 import com.gener.qlbh.dtos.response.ProductVariantInventoryRes;
-import com.gener.qlbh.models.Category;
-import com.gener.qlbh.models.InventoryLot;
+import com.gener.qlbh.models.Inventory;
 import com.gener.qlbh.models.Product;
 import com.gener.qlbh.models.ProductVariant;
 import com.gener.qlbh.repositories.CategoryRepository;
@@ -38,7 +37,7 @@ public class InventoryExcelService {
         boolean onlyActive = req.getOnlyActive() == null || req.getOnlyActive();
         @SuppressWarnings("unchecked")
         List<ProductInventoryRes> items = (List<ProductInventoryRes>) inventoryService
-                .getAllInventory(onlyActive)
+                .getAllInventory()
                 .getBody();
 
         // inventoryService.getAllInventory trả ResponseObject, nên ở controller sẽ truyền data trực tiếp tốt hơn.
@@ -104,7 +103,7 @@ public class InventoryExcelService {
             case RETAIL_PRICE -> writeNumber(cell, variant.getRetailPrice());
             case STORE_PRICE -> writeNumber(cell, variant.getStorePrice());
             case VARIANT_ACTIVE -> cell.setCellValue(boolToString(variant.getActive()));
-            case LOT_CODE -> cell.setCellValue(nvl(variant.getLotCode()));
+            case INVENTORY_CODE -> cell.setCellValue(nvl(variant.getInventoryCode()));
             case ORIGINAL_QTY -> writeNumber(cell, variant.getOriginalQty());
             case REMAINING_QTY -> writeNumber(cell, variant.getRemainingQty());
             case COST_PRICE -> writeNumber(cell, variant.getCostPrice());
@@ -166,7 +165,7 @@ public class InventoryExcelService {
         Double storePrice = readDouble(row, headerMap, "Giá bán buôn");
         Boolean variantActive = readBoolean(row, headerMap, "Biến thể đang bán", true);
 
-        String lotCode = readString(row, headerMap, "Mã lô");
+        String inventoryCode = readString(row, headerMap, "Mã lô");
         Double originalQty = readDouble(row, headerMap, "SL ban đầu");
         Double remainingQty = readDouble(row, headerMap, "SL tồn");
         Double costPrice = readDouble(row, headerMap, "Giá vốn");
@@ -238,18 +237,18 @@ public class InventoryExcelService {
             result.setUpdatedVariants(result.getUpdatedVariants() + 1);
         }
 
-        if ((lotCode != null && !lotCode.isBlank()) || inventoryId != null) {
-            InventoryLot lot = null;
+        if ((inventoryCode != null && !inventoryCode.isBlank()) || inventoryId != null) {
+            Inventory lot = null;
             if (inventoryId != null) {
                 lot = inventoryRepository.findById(inventoryId).orElse(null);
             }
-            if (lot == null && lotCode != null && !lotCode.isBlank()) {
-                lot = inventoryRepository.findFirstByVariant_IdAndLotCode(variant.getId(), lotCode).orElse(null);
+            if (lot == null && inventoryCode != null && !inventoryCode.isBlank()) {
+                lot = inventoryRepository.findFirstByVariant_IdAndInventoryCode(variant.getId(), inventoryCode).orElse(null);
             }
             if (lot == null) {
-                lot = new InventoryLot();
+                lot = new Inventory();
                 lot.setVariant(variant);
-                lot.setLotCode(blankToDefault(lotCode, "AUTO"));
+                lot.setInventoryCode(blankToDefault(inventoryCode, "AUTO"));
                 lot.setOriginalQty(orZero(originalQty));
                 lot.setRemainingQty(orZero(remainingQty));
                 lot.setCostPrice(orZero(costPrice));
@@ -259,7 +258,7 @@ public class InventoryExcelService {
                 result.setCreatedLots(result.getCreatedLots() + 1);
             } else {
                 lot.setVariant(variant);
-                if (lotCode != null && !lotCode.isBlank()) lot.setLotCode(lotCode);
+                if (inventoryCode != null && !inventoryCode.isBlank()) lot.setInventoryCode(inventoryCode);
                 if (originalQty != null) lot.setOriginalQty(originalQty);
                 if (remainingQty != null) lot.setRemainingQty(remainingQty);
                 if (costPrice != null) lot.setCostPrice(costPrice);

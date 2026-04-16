@@ -24,11 +24,11 @@ public class JsonAccessDeniedHandler implements AccessDeniedHandler {
                 : "anonymous";
         ErrorCode errorCode = ErrorCode.FORBIDDEN;
 
-        res.setStatus(errorCode.getHttpStatusCode().value());
+        res.setStatus(errorCode.getHttpStatus().value());
         res.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
         ResponseObject responseObject = ResponseObject.builder()
-                .status(errorCode.getStatus())
+                .status(errorCode.getCode())
                 .message(errorCode.getMessage())
                 .build();
         ObjectMapper objectMapper = new ObjectMapper();

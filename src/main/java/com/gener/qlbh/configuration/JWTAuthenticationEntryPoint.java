@@ -17,11 +17,11 @@ public class JWTAuthenticationEntryPoint implements AuthenticationEntryPoint {
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
         ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
 
-        response.setStatus(errorCode.getHttpStatusCode().value());
+        response.setStatus(errorCode.getHttpStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
         ResponseObject responseObject = ResponseObject.builder()
-                .status(errorCode.getStatus())
+                .status(errorCode.getCode())
                 .message(errorCode.getMessage())
                 .build();
         ObjectMapper objectMapper = new ObjectMapper();

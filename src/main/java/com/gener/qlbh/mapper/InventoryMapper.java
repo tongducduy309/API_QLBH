@@ -3,7 +3,7 @@ package com.gener.qlbh.mapper;
 
 
 import com.gener.qlbh.dtos.response.InventoryRes;
-import com.gener.qlbh.models.InventoryLot;
+import com.gener.qlbh.models.Inventory;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -11,7 +11,7 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface InventoryMapper {
-    List<InventoryRes> toInventoryRes(List<InventoryLot> reqs);
+    List<InventoryRes> toInventoryRes(List<Inventory> reqs);
 
     @Mapping(target = "productId",source = "variant.product.id")
     @Mapping(target = "name",source = "variant.product.name")
@@ -24,5 +24,5 @@ public interface InventoryMapper {
     @Mapping(target = "storePrice",source = "variant.storePrice")
     @Mapping(target = "variantId",source = "variant.id")
     @Mapping(target = "status",source = "variant.businessStatus")
-    InventoryRes toInventoryRes(InventoryLot req);
+    InventoryRes toInventoryRes(Inventory req);
 }

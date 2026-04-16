@@ -7,7 +7,7 @@ import com.gener.qlbh.dtos.request.ProductVariantUpdateReq;
 import com.gener.qlbh.dtos.response.ProductInventoryRes;
 import com.gener.qlbh.dtos.response.ProductVariantInventoryRes;
 import com.gener.qlbh.dtos.response.ProductVariantRes;
-import com.gener.qlbh.models.InventoryLot;
+import com.gener.qlbh.models.Inventory;
 import com.gener.qlbh.models.Product;
 import com.gener.qlbh.models.ProductVariant;
 import org.mapstruct.Mapper;
@@ -47,15 +47,19 @@ public interface ProductMapper {
             return Collections.emptyList();
         }
 
-        List<InventoryLot> inventories = productVariant.getInventories();
+        List<Inventory> inventories = productVariant.getInventories().stream()
+                .filter(inventory -> inventory.getActive()==true)
+                .toList();
 
-        if (inventories == null || inventories.isEmpty()) {
+        if (inventories.isEmpty()) {
             return List.of(mapVariantWithoutInventory(productVariant));
         }
 
         return inventories.stream()
                 .filter(Objects::nonNull)
+
                 .map(inventory -> mapVariantInventory(productVariant, inventory))
+
                 .toList();
     }
 
@@ -70,15 +74,20 @@ public interface ProductMapper {
                 .toList();
     }
 
-    default ProductVariantInventoryRes mapVariantInventory(ProductVariant variant, InventoryLot inventory) {
+    default ProductVariantInventoryRes mapVariantInventory(ProductVariant variant, Inventory inventory) {
         if (variant == null || inventory == null) {
             return null;
         }
 
+//        if (!inventory.getActive()){
+//            return mapVariantWithoutInventory(variant);
+//        }
+
         ProductVariantInventoryRes res = new ProductVariantInventoryRes();
         res.setInventoryId(inventory.getId());
         res.setSku(variant.getSku());
-        res.setLotCode(inventory.getLotCode());
+        res.setProductName(variant.getProduct().getName());
+        res.setInventoryCode(inventory.getInventoryCode());
         res.setOriginalQty(inventory.getOriginalQty());
         res.setOutOfStock(inventory.isOutOfStock());
         res.setVariantId(variant.getId());
@@ -89,8 +98,6 @@ public interface ProductMapper {
         res.setRemainingQty(inventory.getRemainingQty());
         res.setCostPrice(inventory.getCostPrice());
         res.setActive(variant.getBusinessStatus());
-
-
         return res;
     }
 
@@ -98,7 +105,7 @@ public interface ProductMapper {
         ProductVariantInventoryRes res = new ProductVariantInventoryRes();
         res.setInventoryId(null);
         res.setSku(variant.getSku());
-        res.setLotCode(null);
+        res.setInventoryCode(null);
         res.setOriginalQty(0.0);
         res.setOutOfStock(true);
         res.setVariantId(variant.getId());

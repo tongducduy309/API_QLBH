@@ -14,6 +14,7 @@ import com.gener.qlbh.models.Product;
 import com.gener.qlbh.models.ResponseObject;
 import com.gener.qlbh.repositories.CategoryRepository;
 import com.gener.qlbh.repositories.CustomerRepository;
+import com.gener.qlbh.repositories.OrderRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,7 @@ import java.util.Optional;
 public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
+    private final OrderRepository orderRepository;
 
     public ResponseEntity<ResponseObject> getAllCustomers(){
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
@@ -40,12 +42,12 @@ public class CustomerService {
 
     @Transactional
     public ResponseEntity<ResponseObject> getCustomerById(Long id) throws APIException {
-        Customer customer = customerRepository.findById(id).orElseThrow(()-> APIException.builder()
-                .status(ErrorCode.NOT_FOUND.getStatus())
-                .message("Cannot Found Customer With Id = "+id)
-                .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                .build());
+        Customer customer = customerRepository.findById(id).orElseThrow(
+                ()->new APIException(ErrorCode.USER_NOT_FOUND)
+        );
+        Double debt = orderRepository.getDebtByCustomerId(id);
         CustomerDetailRes customerDetailRes = customerMapper.toCustomerDetailRes(customer);
+        customerDetailRes.setTotalDebt(debt);
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
                         .status(SuccessCode.REQUEST.getStatus())
@@ -83,20 +85,19 @@ public class CustomerService {
 
     @Transactional
     public ResponseEntity<ResponseObject> updateCustomer(Long id, CustomerUpdateReq req) throws APIException {
-        boolean existsCustomer = customerRepository.existsById(id);
-        if (!existsCustomer) {
-            throw APIException.builder()
-                    .status(ErrorCode.NOT_FOUND.getStatus())
-                    .message("Cannot Found Product With Id = " + id)
-                    .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                    .build();
-        }
+        Customer customer = customerRepository.findById(id).orElseThrow(
+                ()->new APIException(ErrorCode.USER_NOT_FOUND)
+        );
 
-        Customer newCustomer = customerMapper.toCustomer(req);
-        newCustomer.setId(id);
+        customer.setAddress(req.getAddress());
+        customer.setName(req.getName());
+        customer.setPhone(req.getPhone());
+        customer.setTaxCode(req.getTaxCode());
+        customer.setEmail(req.getEmail());
+
 
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
-                new ResponseObject(SuccessCode.REQUEST.getStatus(), "Update Customer Successfully",customerRepository.save(newCustomer))
+                new ResponseObject(SuccessCode.REQUEST.getStatus(), "Update Customer Successfully",customerRepository.save(customer))
         );
     }
 

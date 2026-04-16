@@ -37,20 +37,12 @@ public class ProductVariantService {
     @Transactional
     public ResponseEntity<ResponseObject> createVariant(ProductVariantCreateReq req) throws APIException {
         if (req == null || req.getProductId() == null) {
-            throw APIException.builder()
-                    .status(ErrorCode.BAD_REQUEST.getStatus())
-                    .message("ProductId is required")
-                    .httpStatusCode(ErrorCode.BAD_REQUEST.getHttpStatusCode())
-                    .build();
+            throw new APIException(ErrorCode.PRODUCT_ID_REQUIRED);
         }
 
 
-        Product product = productRepository.findById(req.getProductId())
-                .orElseThrow(() -> APIException.builder()
-                        .status(ErrorCode.NOT_FOUND.getStatus())
-                        .message("Cannot Found Product With Id = " + req.getProductId())
-                        .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                        .build());
+        Product product = productRepository.findById(req.getProductId()).orElseThrow(
+                ()-> new APIException(ErrorCode.PRODUCT_NOT_FOUND));
 
         ProductVariant variant = ProductVariant.builder()
                 .variantCode(req.getVariantCode())
@@ -79,11 +71,8 @@ public class ProductVariantService {
 
     @Transactional
     public ResponseEntity<ResponseObject> updateVariant(ProductVariantUpdateReq req) throws APIException {
-        ProductVariant existsProduct = variantRepository.findById(req.getId()).orElseThrow(()-> APIException.builder()
-                .status(ErrorCode.NOT_FOUND.getStatus())
-                .message("Cannot Found Product Variant With Id = " + req.getId())
-                .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                .build());
+        ProductVariant existsProduct = variantRepository.findById(req.getId()).orElseThrow(
+                ()-> new APIException(ErrorCode.VARIANT_NOT_FOUND));
 
 
         ProductVariant variant = productMapper.toProductVariant(req);

@@ -43,15 +43,15 @@ public class ProductVariant {
     @OneToMany(mappedBy = "variant", cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE }, orphanRemoval = true)
     @ToString.Exclude
     @JsonManagedReference
-    private List<InventoryLot> inventories = new ArrayList<>();
+    private List<Inventory> inventories = new ArrayList<>();
 
-    public void addInventory(InventoryLot inv) {
+    public void addInventory(Inventory inv) {
         if (inv == null) return;
         inventories.add(inv);
         inv.setVariant(this);
     }
 
-    public void removeInventory(InventoryLot inv) {
+    public void removeInventory(Inventory inv) {
         if (inv == null) return;
         inventories.remove(inv);
         inv.setVariant(null);

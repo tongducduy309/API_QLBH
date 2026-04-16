@@ -12,7 +12,7 @@ import com.gener.qlbh.exception.APIException;
 import com.gener.qlbh.mapper.CustomerMapper;
 import com.gener.qlbh.mapper.OrderMapper;
 import com.gener.qlbh.models.Customer;
-import com.gener.qlbh.models.InventoryLot;
+import com.gener.qlbh.models.Inventory;
 import com.gener.qlbh.models.Order;
 import com.gener.qlbh.models.OrderDetail;
 import com.gener.qlbh.models.ProductVariant;
@@ -33,7 +33,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -88,7 +87,7 @@ public class OrderService {
         if (req.getOrderDetailCreateReqs() != null) {
             for (OrderDetailCreateReq dReq : req.getOrderDetailCreateReqs()) {
                 ProductVariant variant = getVariantOrNull(dReq.getProductVariantId());
-                InventoryLot inventory = getInventoryOrNull(dReq.getInventoryId());
+                Inventory inventory = getInventoryOrNull(dReq.getInventoryId());
 
                 OrderDetail detail = orderMapper.toOrderDetail(dReq);
                 detail.setOrder(order);
@@ -151,13 +150,12 @@ public class OrderService {
         order.getDetails().clear();
         orderDetailRepository.flush();
 
-        Set<OrderDetail> newDetails = new HashSet<>();
         double subtotal = 0d;
 
         if (req.getOrderDetailUpdateReqs() != null) {
             for (OrderDetailUpdateReq dReq : req.getOrderDetailUpdateReqs()) {
                 ProductVariant variant = getVariantOrNull(dReq.getProductVariantId());
-                InventoryLot inventory = getInventoryOrNull(dReq.getInventoryId());
+                Inventory inventory = getInventoryOrNull(dReq.getInventoryId());
 
                 OrderDetail detail = new OrderDetail();
                 detail.setOrder(order);
@@ -175,7 +173,7 @@ public class OrderService {
                     deductInventory(inventory, detail.getTotalQuantity(), dReq.getName());
                 }
 
-                newDetails.add(detail);
+                order.getDetails().add(detail);
                 subtotal += safeDouble(detail.getSubtotal());
             }
         }
@@ -183,7 +181,6 @@ public class OrderService {
         order.setCustomer(customer);
         order.setStatus(newStatus);
         order.setCreatedAt(parseCreatedAt(req.getCreatedAt()));
-        order.setDetails(newDetails);
         order.setSubtotal(subtotal);
         order.setAmount();
 
@@ -222,20 +219,12 @@ public class OrderService {
         Order order = findOrderByIdOrThrow(req.getOrderId());
 
         if (order.getRemainingAmount() == null || order.getRemainingAmount() <= 0) {
-            throw APIException.builder()
-                    .status(ErrorCode.NOT_FOUND.getStatus())
-                    .message("Hóa đơn này đã được trả hoàn tất")
-                    .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                    .build();
+            throw new APIException(ErrorCode.INVOICE_ALREADY_PAID);
         }
 
-        double requestPaid = safeDouble(req.getPaidDept());
+        double requestPaid = safeDouble(req.getAmount());
         if (requestPaid <= 0) {
-            throw APIException.builder()
-                    .status(ErrorCode.BAD_REQUEST.getStatus())
-                    .message("Số tiền thanh toán phải lớn hơn 0")
-                    .httpStatusCode(ErrorCode.BAD_REQUEST.getHttpStatusCode())
-                    .build();
+            throw new APIException(ErrorCode.INVALID_PAYMENT_AMOUNT);
         }
 
         double currentRemaining = safeDouble(order.getRemainingAmount());
@@ -258,11 +247,9 @@ public class OrderService {
 
     @Transactional
     public ResponseEntity<ResponseObject> getDeptOrderByCustomerId(Long customerId) throws APIException {
-        Customer customer = customerRepository.findById(customerId).orElseThrow(() -> APIException.builder()
-                .status(ErrorCode.NOT_FOUND.getStatus())
-                .message("Cannot Found Customer With Id = " + customerId)
-                .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                .build());
+        Customer customer = customerRepository.findById(customerId).orElseThrow(
+                ()->new APIException(ErrorCode.USER_NOT_FOUND)
+        );
 
         List<Order> orders = orderRepository.findByCustomer_IdAndRemainingAmountGreaterThanOrderByCreatedAtDesc(customerId, 0);
 
@@ -289,11 +276,8 @@ public class OrderService {
     }
 
     private Order findOrderByIdOrThrow(Long id) throws APIException {
-        return orderRepository.findById(id).orElseThrow(() -> APIException.builder()
-                .status(ErrorCode.NOT_FOUND.getStatus())
-                .message("Cannot Found Order With Id = " + id)
-                .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                .build());
+        return orderRepository.findById(id).orElseThrow(
+                ()-> new APIException(ErrorCode.INVOICE_NOT_FOUND));
     }
 
     private Customer getCustomerOrNull(Long customerId) throws APIException {
@@ -301,11 +285,9 @@ public class OrderService {
             return null;
         }
 
-        return customerRepository.findById(customerId).orElseThrow(() -> APIException.builder()
-                .status(ErrorCode.NOT_FOUND.getStatus())
-                .message("Cannot Found Customer With Id = " + customerId)
-                .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                .build());
+        return customerRepository.findById(customerId).orElseThrow(
+                ()->new APIException(ErrorCode.USER_NOT_FOUND)
+        );
     }
 
     private ProductVariant getVariantOrNull(Long variantId) throws APIException {
@@ -313,35 +295,28 @@ public class OrderService {
             return null;
         }
 
-        return productVariantRepository.findById(variantId).orElseThrow(() -> APIException.builder()
-                .status(ErrorCode.NOT_FOUND.getStatus())
-                .message("Cannot Found Product Variant With Id = " + variantId)
-                .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                .build());
+        return productVariantRepository.findById(variantId).orElseThrow(() -> new APIException(ErrorCode.VARIANT_NOT_FOUND));
     }
 
-    private InventoryLot getInventoryOrNull(Long inventoryId) throws APIException {
+    private Inventory getInventoryOrNull(Long inventoryId) throws APIException {
         if (inventoryId == null) {
             return null;
         }
 
-        return inventoryRepository.findById(inventoryId).orElseThrow(() -> APIException.builder()
-                .status(ErrorCode.NOT_FOUND.getStatus())
-                .message("Cannot Found Inventory With Id = " + inventoryId)
-                .httpStatusCode(ErrorCode.NOT_FOUND.getHttpStatusCode())
-                .build());
+        return inventoryRepository.findById(inventoryId).orElseThrow(
+                ()-> new APIException(ErrorCode.INVENTORY_NOT_FOUND));
     }
 
     private boolean shouldAffectInventory(OrderStatus status) {
         return status == OrderStatus.CONFIRMED;
     }
 
-    private void deductInventory(InventoryLot inventory, double quantity, String productName) throws APIException {
+    private void deductInventory(Inventory inventory, double quantity, String productName) throws APIException {
         if (inventory == null) {
             throw APIException.builder()
-                    .status(ErrorCode.BAD_REQUEST.getStatus())
+                    .status(ErrorCode.BAD_REQUEST.getCode())
                     .message("Không tìm thấy lô tồn kho cho sản phẩm: " + (productName == null ? "" : productName))
-                    .httpStatusCode(ErrorCode.BAD_REQUEST.getHttpStatusCode())
+                    .httpStatusCode(ErrorCode.BAD_REQUEST.getHttpStatus())
                     .build();
         }
 
@@ -353,9 +328,9 @@ public class OrderService {
 
         if (remainingQty < quantity) {
             throw APIException.builder()
-                    .status(ErrorCode.BAD_REQUEST.getStatus())
+                    .status(ErrorCode.BAD_REQUEST.getCode())
                     .message("Số lượng tồn kho không đủ cho sản phẩm: " + (productName == null ? "" : productName))
-                    .httpStatusCode(ErrorCode.BAD_REQUEST.getHttpStatusCode())
+                    .httpStatusCode(ErrorCode.BAD_REQUEST.getHttpStatus())
                     .build();
         }
 
@@ -363,7 +338,7 @@ public class OrderService {
         inventoryRepository.save(inventory);
     }
 
-    private void addBackInventory(InventoryLot inventory, double quantity) {
+    private void addBackInventory(Inventory inventory, double quantity) {
         if (inventory == null || quantity <= 0) {
             return;
         }

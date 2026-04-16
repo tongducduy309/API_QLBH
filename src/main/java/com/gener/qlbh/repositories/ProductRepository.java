@@ -15,9 +15,13 @@ public interface ProductRepository extends JpaRepository<Product,Long> {
     select distinct p
     from Product p
     left join p.variants v
-    left join v.inventories i with i.active = :status
+    left join v.inventories i
 """)
-    List<Product> findAllWithVariantsAndInventories(@Param("status") boolean status);
+    List<Product> findAllWithVariantsAndInventories();
+
 
     Optional<Product> findFirstByVariants_Sku(String sku);
+
+    Optional<Product> findByNameIgnoreCase(String name);
+
 }

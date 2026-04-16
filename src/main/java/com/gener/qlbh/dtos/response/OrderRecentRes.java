@@ -14,6 +14,6 @@ public class OrderRecentRes {
     private String code;
     private String customerName;
     private Double total;
-    @JsonFormat(pattern = "dd-MM-yyyy")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate createdAt;
 }

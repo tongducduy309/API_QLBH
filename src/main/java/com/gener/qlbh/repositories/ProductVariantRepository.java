@@ -12,4 +12,10 @@ import java.util.Optional;
 
 public interface ProductVariantRepository extends JpaRepository<ProductVariant,Long> {
     Optional<ProductVariant> findFirstBySku(String sku);
+
+    Optional<ProductVariant> findFirstBySkuIgnoreCase(String sku);
+
+    Optional<ProductVariant> findFirstByProduct_IdAndVariantCodeIgnoreCase(Long productId, String variantCode);
+
+    boolean existsBySkuIgnoreCase(String sku);
 }

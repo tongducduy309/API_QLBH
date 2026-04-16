@@ -69,8 +69,8 @@ public class AuthencationService {
         String tokenNew = generateToken(user);
 
         boolean value = verified &&expiredTime.after(new Date());
-        return ResponseEntity.status(value?SuccessCode.REQUEST.getHttpStatusCode(): ErrorCode.UNAUTHORIZED.getHttpStatusCode()).body(
-                new ResponseObject(verified?SuccessCode.REQUEST.getStatus():ErrorCode.UNAUTHORIZED.getStatus(),
+        return ResponseEntity.status(value?SuccessCode.REQUEST.getHttpStatusCode(): ErrorCode.UNAUTHORIZED.getHttpStatus()).body(
+                new ResponseObject(verified?SuccessCode.REQUEST.getStatus():ErrorCode.UNAUTHORIZED.getCode(),
                         value?"Token True":"Token False",
                         AuthenticationRes.builder()
                                 .user(AuthUserRes.builder()
@@ -148,7 +148,7 @@ public class AuthencationService {
         var context = SecurityContextHolder.getContext();
         String name =  context.getAuthentication().getName();
         User user = userRepository.findByUsername(name).orElseThrow(()->
-                new APIException(ErrorCode.USER_NOT_EXISTS));
+                new APIException(ErrorCode.USER_NOT_FOUND));
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
                         .status(SuccessCode.REQUEST.getStatus())

@@ -15,7 +15,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class RevenueBucketRes {
 
-    @JsonFormat(pattern = "dd-MM-yyyy")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate periodStart;
 
     private Long totalOrders;

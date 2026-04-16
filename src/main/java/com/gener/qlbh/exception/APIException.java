@@ -15,9 +15,9 @@ public class APIException extends Exception{
     private HttpStatusCode httpStatusCode;
 
     public APIException(ErrorCode errorCode){
-        this.status = errorCode.getStatus();
+        this.status = errorCode.getCode();
         this.message = errorCode.getMessage();
-        this.httpStatusCode = errorCode.getHttpStatusCode();
+        this.httpStatusCode = errorCode.getHttpStatus();
 
     }
 }
