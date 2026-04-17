@@ -29,9 +29,22 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query(value = """
     SELECT *
     FROM orders o
-    WHERE o.status = 'CONFIRMED'
-    ORDER BY o.created_at DESC
-    LIMIT :amount
+    ORDER BY 
+        substr(o.code, 3, 4) DESC,
+        substr(o.code, 1, 2) DESC,
+        CAST(substr(o.code, instr(o.code, '-') + 1) AS INTEGER) DESC
+""", nativeQuery = true)
+    List<Order> findAllOrdersOrderByCodeDesc();
+
+    @Query(value = """
+    SELECT *
+                    FROM orders o
+                    WHERE o.status = 'CONFIRMED'
+                    ORDER BY\s
+                        substr(o.code, 3, 4) DESC,   -- yyyy
+                        substr(o.code, 1, 2) DESC,   -- MM
+                        CAST(substr(o.code, instr(o.code, '-') + 1) AS INTEGER) DESC
+                    LIMIT :amount
 """, nativeQuery = true)
     List<Order> findOrdersRecent(@Param("amount") Long amount);
 

@@ -6,6 +6,7 @@ import com.gener.qlbh.dtos.request.OrderDetailUpdateReq;
 import com.gener.qlbh.dtos.request.OrderUpdateReq;
 import com.gener.qlbh.dtos.request.PaidDeptReq;
 import com.gener.qlbh.enums.ErrorCode;
+import com.gener.qlbh.enums.OrderDetailKind;
 import com.gener.qlbh.enums.OrderStatus;
 import com.gener.qlbh.enums.SuccessCode;
 import com.gener.qlbh.exception.APIException;
@@ -54,7 +55,7 @@ public class OrderService {
                 ResponseObject.builder()
                         .status(SuccessCode.REQUEST.getStatus())
                         .message("Get All Orders Successfully")
-                        .data(orderMapper.toOrderRes(orderRepository.findAll()))
+                        .data(orderMapper.toOrderRes(orderRepository.findAllOrdersOrderByCodeDesc()))
                         .build()
         );
     }
@@ -72,7 +73,7 @@ public class OrderService {
         );
     }
 
-    @Transactional
+    @Transactional(rollbackOn  = Exception.class)
     public ResponseEntity<ResponseObject> createOrder(OrderCreateReq req) throws APIException {
         Customer customer = getCustomerOrNull(req.getCustomerId());
 
@@ -96,7 +97,7 @@ public class OrderService {
                 detail.setPrice(dReq.getPrice());
                 detail.setLineIndex(dReq.getLineIndex());
 
-                if (shouldAffectInventory(req.getStatus()) && variant != null && inventory!=null) {
+                if (shouldAffectInventory(req.getStatus()) && variant != null && dReq.getKind()== OrderDetailKind.INVENTORY) {
                     deductInventory(inventory, detail.getTotalQuantity(), dReq.getName());
                 }
 
@@ -120,7 +121,7 @@ public class OrderService {
         );
     }
 
-    @Transactional
+    @Transactional(rollbackOn  = Exception.class)
     public ResponseEntity<ResponseObject> getNextOrderCode() {
         return ResponseEntity.status(SuccessCode.REQUEST.getHttpStatusCode()).body(
                 ResponseObject.builder()
@@ -131,7 +132,7 @@ public class OrderService {
         );
     }
 
-    @Transactional
+    @Transactional(rollbackOn  = Exception.class)
     public ResponseEntity<ResponseObject> updateOrder(Long id, OrderUpdateReq req) throws APIException {
         Order order = findOrderByIdOrThrow(id);
 
@@ -169,7 +170,7 @@ public class OrderService {
                 detail.setProductVariant(variant);
                 detail.setInventory(inventory);
 
-                if (newAffectInventory && variant != null) {
+                if (newAffectInventory&&shouldAffectInventory(req.getStatus()) && variant != null && dReq.getKind()== OrderDetailKind.INVENTORY) {
                     deductInventory(inventory, detail.getTotalQuantity(), dReq.getName());
                 }
 
@@ -195,7 +196,7 @@ public class OrderService {
         );
     }
 
-    @Transactional
+    @Transactional(rollbackOn  = Exception.class)
     public ResponseEntity<ResponseObject> deleteOrder(Long id) throws APIException {
         Order order = findOrderByIdOrThrow(id);
 
@@ -214,7 +215,7 @@ public class OrderService {
         );
     }
 
-    @Transactional
+    @Transactional(rollbackOn  = Exception.class)
     public ResponseEntity<ResponseObject> paidDeptOrder(PaidDeptReq req) throws APIException {
         Order order = findOrderByIdOrThrow(req.getOrderId());
 
@@ -354,7 +355,7 @@ public class OrderService {
         }
 
         for (OrderDetail detail : order.getDetails()) {
-            if (detail.getProductVariant() != null && detail.getInventory() != null) {
+            if (detail.getProductVariant() != null && detail.getInventory() != null && detail.getKind()==OrderDetailKind.INVENTORY) {
                 addBackInventory(detail.getInventory(), detail.getTotalQuantity());
             }
         }

@@ -58,7 +58,7 @@ public class CustomerService {
 
     }
 
-    @Transactional
+    @Transactional(rollbackOn  = Exception.class)
     public ResponseEntity<ResponseObject> createCustomer(CustomerCreateReq req){
         Customer customer = customerMapper.toCustomer(req);
         return ResponseEntity.status(SuccessCode.CREATE.getHttpStatusCode()).body(
@@ -71,7 +71,7 @@ public class CustomerService {
 
     }
 
-    @Transactional
+    @Transactional(rollbackOn  = Exception.class)
     public ResponseEntity<ResponseObject> deleteCustomer(Long id){
         Optional<Customer> customer = customerRepository.findById(id);
         if (customer.isPresent()){
@@ -83,7 +83,7 @@ public class CustomerService {
         );
     }
 
-    @Transactional
+    @Transactional(rollbackOn  = Exception.class)
     public ResponseEntity<ResponseObject> updateCustomer(Long id, CustomerUpdateReq req) throws APIException {
         Customer customer = customerRepository.findById(id).orElseThrow(
                 ()->new APIException(ErrorCode.USER_NOT_FOUND)

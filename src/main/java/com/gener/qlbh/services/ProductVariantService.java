@@ -34,7 +34,7 @@ public class ProductVariantService {
                         .build()
         );
     }
-    @Transactional
+    @Transactional(rollbackFor  = Exception.class)
     public ResponseEntity<ResponseObject> createVariant(ProductVariantCreateReq req) throws APIException {
         if (req == null || req.getProductId() == null) {
             throw new APIException(ErrorCode.PRODUCT_ID_REQUIRED);
@@ -69,7 +69,7 @@ public class ProductVariantService {
         );
     }
 
-    @Transactional
+    @Transactional(rollbackFor  = Exception.class)
     public ResponseEntity<ResponseObject> updateVariant(ProductVariantUpdateReq req) throws APIException {
         ProductVariant existsProduct = variantRepository.findById(req.getId()).orElseThrow(
                 ()-> new APIException(ErrorCode.VARIANT_NOT_FOUND));

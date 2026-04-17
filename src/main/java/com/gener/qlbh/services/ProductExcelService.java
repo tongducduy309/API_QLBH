@@ -32,7 +32,7 @@ public class ProductExcelService {
     private final ProductRepository productRepository;
     private final ProductVariantRepository productVariantRepository;
 
-    @Transactional
+    @Transactional(rollbackFor  = Exception.class)
     public ResponseEntity<ResponseObject> importProductExcel(MultipartFile file) throws APIException {
         if (file == null || file.isEmpty()) {
             throw APIException.builder()

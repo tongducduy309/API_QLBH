@@ -11,6 +11,7 @@ import com.gener.qlbh.models.User;
 import com.gener.qlbh.models.UserSetting;
 import com.gener.qlbh.repositories.UserRepository;
 import com.gener.qlbh.repositories.UserSettingRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,7 @@ public class UserSettingService {
         );
     }
 
+    @Transactional(rollbackOn  = Exception.class)
     public ResponseEntity<ResponseObject> updateMySettings(UserSettingUpdateReq req) throws APIException {
         User user = authencationService.getUserFromToken();
 
@@ -67,6 +69,7 @@ public class UserSettingService {
         );
     }
 
+    @Transactional(rollbackOn  = Exception.class)
     private UserSetting createDefaultSetting(User user) {
         UserSetting setting = UserSetting.builder()
                 .user(user)

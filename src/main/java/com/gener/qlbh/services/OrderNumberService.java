@@ -1,5 +1,6 @@
 package com.gener.qlbh.services;
 
+import com.gener.qlbh.exception.APIException;
 import com.gener.qlbh.repositories.OrderSequenceRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ public class OrderNumberService {
     private static final DateTimeFormatter PERIOD_FMT = DateTimeFormatter.ofPattern("MMyyyy");
 
     /** Sinh mã đơn dạng MMyyyy/000001, reset mỗi tháng */
-    @Transactional
+    @Transactional(rollbackOn  = Exception.class)
     public String nextOrderCode() {
         String period = LocalDate.now().format(PERIOD_FMT);
 
@@ -39,7 +40,7 @@ public class OrderNumberService {
         return period + "-" + six;
     }
 
-    @Transactional
+    @Transactional(rollbackOn  = Exception.class)
     public String getNextOrderCode(){
         String period = LocalDate.now().format(PERIOD_FMT);
         Long val = repo.findNextVal(period);

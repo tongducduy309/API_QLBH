@@ -9,6 +9,7 @@ import com.gener.qlbh.models.ResponseObject;
 import com.gener.qlbh.repositories.OrderRepository;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -23,6 +24,7 @@ public class InvoiceEmailService {
     private final JavaMailSender mailSender;
     private final OrderRepository orderRepository;
 
+    @Transactional(rollbackOn  = Exception.class)
     public ResponseEntity<ResponseObject> sendInvoiceEmail(
             Long orderId,
             SendInvoiceEmailReq req,

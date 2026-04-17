@@ -77,7 +77,7 @@ public class InventoryService {
         );
     }
 
-    @Transactional
+    @Transactional(rollbackOn  = Exception.class)
     public ResponseEntity<ResponseObject> deleteInventory(Long id) throws APIException {
         Inventory inventory = inventoryRepository.findById(id).orElseThrow(
                 ()-> new APIException(ErrorCode.INVENTORY_NOT_FOUND));
@@ -88,7 +88,7 @@ public class InventoryService {
         );
     }
 
-    @Transactional
+    @Transactional(rollbackOn  = Exception.class)
     public ResponseEntity<ResponseObject> updateInventory(Long id, InventoryUpdateReq req) throws APIException {
         Inventory inventory = inventoryRepository.findById(id).orElseThrow(
                 ()-> new APIException(ErrorCode.INVENTORY_NOT_FOUND));

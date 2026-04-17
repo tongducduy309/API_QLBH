@@ -60,7 +60,7 @@ public class PurchaseReceiptsService {
         );
     }
 
-    @Transactional
+    @Transactional(rollbackOn  = Exception.class)
     public ResponseEntity<ResponseObject> createPurchaseReceipts(PurchaseReceiptsCreateReq req) throws APIException {
         validateCreateRequest(req);
 
@@ -91,7 +91,7 @@ public class PurchaseReceiptsService {
         );
     }
 
-    @Transactional
+    @Transactional(rollbackOn  = Exception.class)
     public ResponseEntity<ResponseObject> deletePurchaseReceipts(Long id) throws APIException {
         PurchaseReceipts receipt = purchaseReceiptsRepository.findById(id)
                 .orElseThrow(() -> new APIException(ErrorCode.PURCHASE_RECEIPT_NOT_FOUND));

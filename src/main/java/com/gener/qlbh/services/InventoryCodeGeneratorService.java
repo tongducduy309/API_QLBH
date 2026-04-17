@@ -17,7 +17,7 @@ public class InventoryCodeGeneratorService {
     private static final DateTimeFormatter YYYYMM_FORMAT =
             DateTimeFormatter.ofPattern("yyyyMM");
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, rollbackFor = Exception.class)
     public String generateNextCode() {
         String yearMonth = LocalDate.now().format(YYYYMM_FORMAT);
         String prefix = "INV-" + yearMonth + "-";

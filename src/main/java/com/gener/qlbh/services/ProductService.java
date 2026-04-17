@@ -58,7 +58,7 @@ public class ProductService {
 
     }
 
-    @Transactional
+    @Transactional(rollbackOn  = Exception.class)
     public ResponseEntity<ResponseObject> createProduct(ProductCreateReq req) throws APIException {
 //        Category category = categoryRepository.findById(req.getCategoryId()).orElseThrow(()-> APIException.builder()
 //                .status(ErrorCode.NOT_FOUND.getStatus())
@@ -93,7 +93,7 @@ public class ProductService {
 
     }
 
-    @Transactional
+    @Transactional(rollbackOn  = Exception.class)
     public ResponseEntity<ResponseObject> deleteProduct(Long id) throws APIException {
         Optional<Product> product = productRepository.findById(id);
         if (product.isPresent()){
@@ -106,7 +106,7 @@ public class ProductService {
     }
 
 
-    @Transactional
+    @Transactional(rollbackOn  = Exception.class)
     public ResponseEntity<ResponseObject> updateProduct(Long id, ProductUpdateReq req) throws APIException {
 
         Product product = productRepository.findById(id).orElseThrow(
@@ -182,7 +182,7 @@ public class ProductService {
                 .body(new ResponseObject(SuccessCode.REQUEST.getStatus(), "Update Product Successfully", saved));
     }
 
-    @Transactional
+    @Transactional(rollbackOn  = Exception.class)
     public ResponseEntity<ResponseObject> updateWishlish(Long id, ProductWishlistUpdateReq req) throws APIException {
         Product product = productRepository.findById(id).orElseThrow(
                 ()-> new APIException(ErrorCode.PRODUCT_NOT_FOUND));
