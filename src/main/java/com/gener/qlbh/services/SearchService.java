@@ -7,9 +7,11 @@ import com.gener.qlbh.repositories.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.text.Normalizer;
 import java.text.NumberFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -226,8 +228,15 @@ public class SearchService {
         return false;
     }
 
+    private static final Pattern NON_ACCENT = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+
     private String normalize(String value) {
-        return value == null ? "" : value.toLowerCase().trim();
+        if (value == null) return "";
+
+        String normalized = Normalizer.normalize(value, Normalizer.Form.NFD);
+        normalized = NON_ACCENT.matcher(normalized).replaceAll("");
+
+        return normalized.toLowerCase().trim();
     }
 
     private String join(String delimiter, String... values) {

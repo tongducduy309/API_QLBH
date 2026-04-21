@@ -15,4 +15,5 @@ public class AuthenticationRes
     private String accessToken;
     private AuthUserRes user;
     private boolean active;
+
 }
