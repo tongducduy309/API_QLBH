@@ -1,9 +1,10 @@
 package com.gener.qlbh.database;
 
 import com.gener.qlbh.dtos.request.*;
-import com.gener.qlbh.dtos.request.OrderDetailCreateReq;
+import com.gener.qlbh.enums.EmployeeStatus;
 import com.gener.qlbh.enums.OrderDetailKind;
 import com.gener.qlbh.enums.OrderStatus;
+import com.gener.qlbh.enums.Role;
 import com.gener.qlbh.models.*;
 import com.gener.qlbh.repositories.*;
 import com.gener.qlbh.services.OrderService;
@@ -15,148 +16,266 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Set;
 
 @Configuration
 @Slf4j
 public class database {
+
     @Bean
-    CommandLineRunner initDatabase(CategoryRepository categoryRepository, ProductRepository productRepository, ProductService productService, CustomerRepository customerRepository,
-                                   OrderRepository orderRepository, OrderService orderService, PurchaseReceiptsService purchaseReceiptsService, ProductVariantService productVariantService
-                                   ){
-        return new CommandLineRunner() {
-            @Override
-            public void run(String... args) throws Exception {
+    CommandLineRunner initDatabase(
+            CategoryRepository categoryRepository,
+            ProductRepository productRepository,
+            ProductService productService,
+            CustomerRepository customerRepository,
+            OrderRepository orderRepository,
+            OrderService orderService,
+            PurchaseReceiptsService purchaseReceiptsService,
+            ProductVariantService productVariantService,
+            EmployeeRepository employeeRepository,
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder
+    ) {
+        return args -> {
 
-//                Category category = Category.builder()
-//                        .name("Tôn")
-//                        .defaultBaseUnit("m")
-//                        .build();
-//                categoryRepository.save(category);
-                ProductCreateReq productCreateReq = ProductCreateReq.builder()
-                        .name("Tôn Lạnh")
-                        .baseUnit("m")
-                        .active(true)
-//                        .categoryId(category.getId())
-                        .description("Tôn lạnh (hay còn gọi là tôn mạ nhôm kẽm) là một loại vật liệu kim loại được sử dụng rất phổ biến trong xây dựng và công nghiệp nhờ vào khả năng chống ăn mòn và phản xạ nhiệt vượt trội. ")
-                        .categoryName("Tôn")
-                        .build();
-                ResponseEntity<ResponseObject> res = productService.createProduct(productCreateReq);
-                Long productId;
-                String nameProduct;
-                try {
-                    // 1. ÉP KIỂU TRỰC TIẾP thành Product model
-                    //    (Đảm bảo import đúng: com.gener.qlbh.models.Product)
-                    Product createdProduct = (Product) res.getBody().getData();
+            // =========================
+            // SEED USER + EMPLOYEE
+            // =========================
+            seedEmployee(
+                    employeeRepository,
+                    userRepository,
+                    passwordEncoder,
+                    "NV001",
+                    "Quản trị viên hệ thống",
+                    "0900000001",
+                    "TP.HCM",
+                    "Admin",
+                    LocalDate.of(2025, 1, 1),
+                    20000000D,
+                    "admin_nv",
+                    "123456",
+                    "admin@qlbh.com",
+                    Set.of(Role.ADMIN)
+            );
 
-                    // 2. Lấy ID từ đối tượng Product đã ép kiểu
-                    productId = createdProduct.getId();
-                    nameProduct = createdProduct.getName();
+            seedEmployee(
+                    employeeRepository,
+                    userRepository,
+                    passwordEncoder,
+                    "NV002",
+                    "Nguyễn Văn Quản Lý",
+                    "0900000002",
+                    "TP.HCM",
+                    "Quản lý cửa hàng",
+                    LocalDate.of(2025, 2, 1),
+                    15000000D,
+                    "manager01",
+                    "123456",
+                    "manager@qlbh.com",
+                    Set.of(Role.STORE_MANAGER)
+            );
 
-                    System.out.println("-> Đã tạo Product ID: " + productId);
-                } catch (Exception e) {
-                    System.err.println("LỖI TRÍCH XUẤT PRODUCT ID: " + e.getMessage());
-                    // In stack trace để debug thêm nếu cần
-                    e.printStackTrace();
-                    System.err.println("Dừng khởi tạo Order.");
-                    return;
-                }
+            seedEmployee(
+                    employeeRepository,
+                    userRepository,
+                    passwordEncoder,
+                    "NV003",
+                    "Trần Thị Văn Phòng",
+                    "0900000003",
+                    "TP.HCM",
+                    "Nhân viên văn phòng",
+                    LocalDate.of(2025, 3, 1),
+                    10000000D,
+                    "office01",
+                    "123456",
+                    "office@qlbh.com",
+                    Set.of(Role.OFFICE_STAFF)
+            );
 
-                Customer customer = Customer.builder()
-                        .name("Test")
-                        .phone("0586152003")
-                        .address("HCM")
-                        .build();
-                customerRepository.save(customer);
+            seedEmployee(
+                    employeeRepository,
+                    userRepository,
+                    passwordEncoder,
+                    "NV004",
+                    "Lê Văn Giao Hàng",
+                    "0900000004",
+                    "TP.HCM",
+                    "Chạy máy kiêm giao hàng",
+                    LocalDate.of(2025, 4, 1),
+                    12000000D,
+                    "delivery01",
+                    "123456",
+                    "delivery@qlbh.com",
+                    Set.of(Role.OPERATOR_DELIVERY)
+            );
 
-                ProductVariantCreateReq vReq = ProductVariantCreateReq.builder()
-                        .productId(productId)
-                        .variantCode("0.40mm")
-                        .sku("TL4DA")
-                        .retailPrice(160000.0)
-                        .storePrice(155000.0)
-                        .weight("4.2kg")
-                        .build();
+            // =========================
+            // GIỮ NGUYÊN PHẦN DỮ LIỆU CŨ
+            // =========================
+            ProductCreateReq productCreateReq = ProductCreateReq.builder()
+                    .name("Tôn Lạnh")
+                    .baseUnit("m")
+                    .active(true)
+                    .description("Tôn lạnh (hay còn gọi là tôn mạ nhôm kẽm) là một loại vật liệu kim loại được sử dụng rất phổ biến trong xây dựng và công nghiệp nhờ vào khả năng chống ăn mòn và phản xạ nhiệt vượt trội.")
+                    .categoryName("Tôn")
+                    .build();
 
-                ResponseEntity<ResponseObject> vRes = productVariantService.createVariant(vReq);
-                ProductVariant createdVariant = (ProductVariant) vRes.getBody().getData();
-                Long variantId = createdVariant.getId();
+            ResponseEntity<ResponseObject> res = productService.createProduct(productCreateReq);
+            Long productId;
+            String nameProduct;
 
-// sau đó tạo purchase order cho variant
-                PurchaseReceiptsCreateReq purchaseReceiptsCreateReq = PurchaseReceiptsCreateReq.builder()
-                        .productVariantId(variantId)  // dùng variant id
-                        .totalQuantity(500d)
-                        .cost(80000d)
-                        .totalCost(40000000d)
-                        .supplier("Dong A")
-                        .build();
-                purchaseReceiptsService.createPurchaseReceipts(purchaseReceiptsCreateReq);
+            try {
+                Product createdProduct = (Product) res.getBody().getData();
+                productId = createdProduct.getId();
+                nameProduct = createdProduct.getName();
 
-                OrderDetailCreateReq orderDetailCreateReqA = OrderDetailCreateReq.builder()
-//                        .productVariantId()(productId)
-                        .productVariantId(variantId)
-                        .length(2.5d)
-                        .quantity(5d)
-                        .price(160000d)
-                        .name(nameProduct)
-                        .inventoryId(1L)
-                        .baseUnit("m")
-                        .kind(OrderDetailKind.INVENTORY)
-                        .build();
-                OrderDetailCreateReq orderDetailCreateReqB = OrderDetailCreateReq.builder()
-                        .quantity(1d)
-                        .price(20000d)
-                        .name("Công uốn")
-                        .kind(OrderDetailKind.EXPENSE)
-                        .build();
-                OrderDetailCreateReq orderDetailCreateReqC = OrderDetailCreateReq.builder()
-                        .quantity(1d)
-                        .price(20000d)
-                        .name("Công uốn")
-                        .kind(OrderDetailKind.EXPENSE)
-                        .build();
-                OrderDetailCreateReq orderDetailCreateReqD = OrderDetailCreateReq.builder()
-                        .quantity(1d)
-                        .price(20000d)
-                        .name("Công uốn")
-                        .kind(OrderDetailKind.EXPENSE)
-                        .build();
-                OrderDetailCreateReq orderDetailCreateReqE = OrderDetailCreateReq.builder()
-                        .quantity(1d)
-                        .price(20000d)
-                        .name("Công uốn")
-                        .kind(OrderDetailKind.EXPENSE)
-                        .build();
-                List<OrderDetailCreateReq> orderDetailCreateReqs = new ArrayList<>();
-                orderDetailCreateReqs.add(orderDetailCreateReqA);
-                orderDetailCreateReqs.add(orderDetailCreateReqB);
-                orderDetailCreateReqs.add(orderDetailCreateReqB);
-                orderDetailCreateReqs.add(orderDetailCreateReqC);
-                orderDetailCreateReqs.add(orderDetailCreateReqD);
-                orderDetailCreateReqs.add(orderDetailCreateReqE);
-                OrderCreateReq order = OrderCreateReq.builder()
-                        .note("Giao sáng mai, liên hệ trước 30 phút.")
-                        .paidAmount(50000d)
-                        .shippingFee(10000d)
-                        .orderDetailCreateReqs(orderDetailCreateReqs)
-                        .customerId(customer.getId())
-                        .status(OrderStatus.CONFIRMED)
-                        .build();
-                orderService.createOrder(order);
-//                Product product = Product.builder()
-//                        .name("Tôn Lạnh 0.40mm")
-////                        .retailPrice(160000.0)
-////                        .storePrice(155000.0)
-//                        .baseUnit("m")
-////                        .category(category)
-//                        .build();
-//                productRepository.save(product);
-
-
+                System.out.println("-> Đã tạo Product ID: " + productId);
+            } catch (Exception e) {
+                System.err.println("LỖI TRÍCH XUẤT PRODUCT ID: " + e.getMessage());
+                e.printStackTrace();
+                System.err.println("Dừng khởi tạo Order.");
+                return;
             }
+
+            Customer customer = Customer.builder()
+                    .name("Test")
+                    .phone("0586152003")
+                    .address("HCM")
+                    .build();
+            customerRepository.save(customer);
+
+            ProductVariantCreateReq vReq = ProductVariantCreateReq.builder()
+                    .productId(productId)
+                    .variantCode("0.40mm")
+                    .sku("TL4DA")
+                    .retailPrice(160000.0)
+                    .storePrice(155000.0)
+                    .weight("4.2kg")
+                    .build();
+
+            ResponseEntity<ResponseObject> vRes = productVariantService.createVariant(vReq);
+            ProductVariant createdVariant = (ProductVariant) vRes.getBody().getData();
+            Long variantId = createdVariant.getId();
+
+            PurchaseReceiptsCreateReq purchaseReceiptsCreateReq = PurchaseReceiptsCreateReq.builder()
+                    .productVariantId(variantId)
+                    .totalQuantity(500d)
+                    .cost(80000d)
+                    .totalCost(40000000d)
+                    .supplier("Dong A")
+                    .build();
+            purchaseReceiptsService.createPurchaseReceipts(purchaseReceiptsCreateReq);
+
+            OrderDetailCreateReq orderDetailCreateReqA = OrderDetailCreateReq.builder()
+                    .productVariantId(variantId)
+                    .length(2.5d)
+                    .quantity(5d)
+                    .price(160000d)
+                    .name(nameProduct)
+                    .inventoryId(1L)
+                    .baseUnit("m")
+                    .kind(OrderDetailKind.INVENTORY)
+                    .build();
+
+            OrderDetailCreateReq orderDetailCreateReqB = OrderDetailCreateReq.builder()
+                    .quantity(1d)
+                    .price(20000d)
+                    .name("Công uốn")
+                    .kind(OrderDetailKind.EXPENSE)
+                    .build();
+
+            OrderDetailCreateReq orderDetailCreateReqC = OrderDetailCreateReq.builder()
+                    .quantity(1d)
+                    .price(20000d)
+                    .name("Công uốn")
+                    .kind(OrderDetailKind.EXPENSE)
+                    .build();
+
+            OrderDetailCreateReq orderDetailCreateReqD = OrderDetailCreateReq.builder()
+                    .quantity(1d)
+                    .price(20000d)
+                    .name("Công uốn")
+                    .kind(OrderDetailKind.EXPENSE)
+                    .build();
+
+            OrderDetailCreateReq orderDetailCreateReqE = OrderDetailCreateReq.builder()
+                    .quantity(1d)
+                    .price(20000d)
+                    .name("Công uốn")
+                    .kind(OrderDetailKind.EXPENSE)
+                    .build();
+
+            List<OrderDetailCreateReq> orderDetailCreateReqs = new ArrayList<>();
+            orderDetailCreateReqs.add(orderDetailCreateReqA);
+            orderDetailCreateReqs.add(orderDetailCreateReqB);
+            orderDetailCreateReqs.add(orderDetailCreateReqB);
+            orderDetailCreateReqs.add(orderDetailCreateReqC);
+            orderDetailCreateReqs.add(orderDetailCreateReqD);
+            orderDetailCreateReqs.add(orderDetailCreateReqE);
+
+            OrderCreateReq order = OrderCreateReq.builder()
+                    .note("Giao sáng mai, liên hệ trước 30 phút.")
+                    .paidAmount(50000d)
+                    .shippingFee(10000d)
+                    .orderDetailCreateReqs(orderDetailCreateReqs)
+                    .customerId(customer.getId())
+                    .status(OrderStatus.CONFIRMED)
+                    .build();
+
+            orderService.createOrder(order);
         };
+    }
+
+    private void seedEmployee(
+            EmployeeRepository employeeRepository,
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            String code,
+            String fullName,
+            String phone,
+            String address,
+            String position,
+            LocalDate hireDate,
+            Double baseSalary,
+            String username,
+            String rawPassword,
+            String email,
+            Set<Role> roles
+    ) {
+        if (employeeRepository.existsByCode(code) || userRepository.existsByUsername(username)) {
+            return;
+        }
+
+        User user = User.builder()
+                .username(username)
+                .password(passwordEncoder.encode(rawPassword))
+                .fullName(fullName)
+                .email(email)
+                .roles(roles)
+                .active(true)
+                .build();
+
+        User savedUser = userRepository.save(user);
+
+        Employee employee = Employee.builder()
+                .code(code)
+                .fullName(fullName)
+                .phone(phone)
+                .address(address)
+                .position(position)
+                .hireDate(hireDate)
+                .status(EmployeeStatus.ACTIVE)
+                .baseSalary(baseSalary)
+                .user(savedUser)
+                .build();
+
+        employeeRepository.save(employee);
+
+        log.info("Seed employee success: {} - {}", code, fullName);
     }
 }
