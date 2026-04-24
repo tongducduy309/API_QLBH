@@ -56,3 +56,5 @@ management:
 jwt:
   secret: BxsmVbElz3wP7iqRPIxnLSCuc1xJ890ymIPrvtkheXny6NZtiaWzIHOefrBoKIp5
   expiration-ms: ${JWT_EXPIRATION_MS:8760}
+user:
+  password_default: ${DEFAULT_PASSWORD_USER}

@@ -19,7 +19,6 @@ public class EmployeeCreateReq {
     private Double baseSalary;
 
     private String username;
-    private String password;
     private String email;
     private Role role;
 }

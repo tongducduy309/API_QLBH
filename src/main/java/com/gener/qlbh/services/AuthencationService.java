@@ -76,6 +76,7 @@ public class AuthencationService {
                                 .user(AuthUserRes.builder()
                                         .fullName(user.getFullName())
                                         .createdAt(user.getCreatedAt())
+                                        .roles(user.getRoles())
                                         .build())
                                 .accessToken(tokenNew)
                                 .active(value)

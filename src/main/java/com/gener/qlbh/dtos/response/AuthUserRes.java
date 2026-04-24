@@ -1,6 +1,7 @@
 package com.gener.qlbh.dtos.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.gener.qlbh.enums.Role;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,5 +16,5 @@ public class AuthUserRes {
     private String fullName;
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime createdAt;
-    private Set<String> roles;
+    private Set<Role> roles;
 }

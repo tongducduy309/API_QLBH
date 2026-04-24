@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -26,4 +27,8 @@ public class EmployeeDetailRes {
     private LocalDateTime createdAt;
 
     private User user;
+
+    private List<EmployeeLeaveRes> leaves;
+    private Double leaveDaysThisMonth;
+    private Boolean onLeaveToday;
 }
