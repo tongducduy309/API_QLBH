@@ -8,8 +8,10 @@ import com.gener.qlbh.dtos.response.AuthenticationRes;
 import com.gener.qlbh.enums.ErrorCode;
 import com.gener.qlbh.enums.SuccessCode;
 import com.gener.qlbh.exception.APIException;
+import com.gener.qlbh.models.Employee;
 import com.gener.qlbh.models.ResponseObject;
 import com.gener.qlbh.models.User;
+import com.gener.qlbh.repositories.EmployeeRepository;
 import com.gener.qlbh.repositories.UserRepository;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -39,7 +41,7 @@ import java.util.StringJoiner;
 @RequiredArgsConstructor
 public class AuthencationService {
     private final UserRepository userRepository;
-    private final UserService userService;
+    private final EmployeeRepository employeeRepository;
 //    private final AuthencationService authencationService;
     private static final Logger logger = LoggerFactory.getLogger(AuthencationService.class);
 
@@ -66,21 +68,31 @@ public class AuthencationService {
 
         User user = getUserFromToken();
 
+
+
         String tokenNew = generateToken(user);
 
+        Employee employee = employeeRepository.findByUserId(user.getId()).orElse(null);
+
         boolean value = verified &&expiredTime.after(new Date());
+
+
         return ResponseEntity.status(value?SuccessCode.REQUEST.getHttpStatusCode(): ErrorCode.UNAUTHORIZED.getHttpStatus()).body(
                 new ResponseObject(verified?SuccessCode.REQUEST.getStatus():ErrorCode.UNAUTHORIZED.getCode(),
                         value?"Token True":"Token False",
-                        AuthenticationRes.builder()
+                        value?AuthenticationRes.builder()
                                 .user(AuthUserRes.builder()
                                         .fullName(user.getFullName())
                                         .createdAt(user.getCreatedAt())
                                         .roles(user.getRoles())
+                                        .email(user.getEmail())
+                                        .username(user.getUsername())
+                                        .position(employee.getPosition())
+                                        .code(employee.getCode())
                                         .build())
                                 .accessToken(tokenNew)
                                 .active(value)
-                                .build()
+                                .build():null
                         )
         );
     }

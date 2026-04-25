@@ -10,15 +10,14 @@ import com.gener.qlbh.enums.SuccessCode;
 import com.gener.qlbh.exception.APIException;
 import com.gener.qlbh.mapper.EmployeeLeaveMapper;
 import com.gener.qlbh.mapper.EmployeeMapper;
-import com.gener.qlbh.models.Employee;
-import com.gener.qlbh.models.EmployeeLeave;
-import com.gener.qlbh.models.ResponseObject;
-import com.gener.qlbh.models.User;
+import com.gener.qlbh.models.*;
+import com.gener.qlbh.repositories.EmployeeCodeSequenceRepository;
 import com.gener.qlbh.repositories.EmployeeLeaveRepository;
 import com.gener.qlbh.repositories.EmployeeRepository;
 import com.gener.qlbh.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +27,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EmployeeService {
@@ -38,6 +38,7 @@ public class EmployeeService {
     private final EmployeeMapper employeeMapper;
     private final EmployeeLeaveMapper employeeLeaveMapper;
     private final PasswordEncoder passwordEncoder;
+    private final EmployeeCodeSequenceRepository employeeCodeSequenceRepository;
 
     @Value("${user.password_default}")
     private String PASSWORD_DEFAULT;
@@ -112,14 +113,14 @@ public class EmployeeService {
 
     @Transactional
     public ResponseEntity<?> createEmployee(EmployeeCreateReq req) throws APIException {
-        boolean existsEmployeeCode = employeeRepository.existsByCode(req.getCode());
-        if (existsEmployeeCode) {
-            throw APIException.builder()
-                    .status(ErrorCode.CONFLICT.getCode())
-                    .message("Employee Code Already Exists")
-                    .httpStatusCode(ErrorCode.CONFLICT.getHttpStatus())
-                    .build();
-        }
+//        boolean existsEmployeeCode = employeeRepository.existsByCode(req.getCode());
+//        if (existsEmployeeCode) {
+//            throw APIException.builder()
+//                    .status(ErrorCode.CONFLICT.getCode())
+//                    .message("Employee Code Already Exists")
+//                    .httpStatusCode(ErrorCode.CONFLICT.getHttpStatus())
+//                    .build();
+//        }
 
         boolean existsUsername = userRepository.existsByUsername(req.getUsername());
         if (existsUsername) {
@@ -129,6 +130,8 @@ public class EmployeeService {
                     .httpStatusCode(ErrorCode.CONFLICT.getHttpStatus())
                     .build();
         }
+
+        log.info("Password: "+ PASSWORD_DEFAULT);
 
         User user = User.builder()
                 .username(req.getUsername())
@@ -141,9 +144,14 @@ public class EmployeeService {
 
         User savedUser = userRepository.save(user);
 
+
         Employee employee = employeeMapper.toEmployee(req);
         employee.setUser(savedUser);
+        String code = generateEmployeeCode();
+
+        employee.setCode(code);
         employee.setActive(true);
+
 
         Employee savedEmployee = employeeRepository.save(employee);
 
@@ -354,4 +362,14 @@ public class EmployeeService {
                         .build()
         );
     }
+
+    private String generateEmployeeCode() {
+        EmployeeCodeSequence sequence = employeeCodeSequenceRepository.save(
+                new EmployeeCodeSequence()
+        );
+
+        return String.format("NV%05d", sequence.getId());
+    }
+
+
 }

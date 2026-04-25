@@ -5,12 +5,10 @@ import com.gener.qlbh.enums.EmployeeStatus;
 import com.gener.qlbh.enums.OrderDetailKind;
 import com.gener.qlbh.enums.OrderStatus;
 import com.gener.qlbh.enums.Role;
+import com.gener.qlbh.exception.APIException;
 import com.gener.qlbh.models.*;
 import com.gener.qlbh.repositories.*;
-import com.gener.qlbh.services.OrderService;
-import com.gener.qlbh.services.ProductService;
-import com.gener.qlbh.services.ProductVariantService;
-import com.gener.qlbh.services.PurchaseReceiptsService;
+import com.gener.qlbh.services.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -39,7 +37,8 @@ public class database {
             ProductVariantService productVariantService,
             EmployeeRepository employeeRepository,
             UserRepository userRepository,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            EmployeeService employeeService
     ) {
         return args -> {
 
@@ -47,10 +46,8 @@ public class database {
             // SEED USER + EMPLOYEE
             // =========================
             seedEmployee(
-                    employeeRepository,
+                    employeeService,
                     userRepository,
-                    passwordEncoder,
-                    "NV001",
                     "Quản trị viên hệ thống",
                     "0900000001",
                     "TP.HCM",
@@ -58,16 +55,14 @@ public class database {
                     LocalDate.of(2025, 1, 1),
                     20000000D,
                     "admin_nv",
-                    "123456",
+
                     "admin@qlbh.com",
                     Set.of(Role.ADMIN)
             );
 
             seedEmployee(
-                    employeeRepository,
+                    employeeService,
                     userRepository,
-                    passwordEncoder,
-                    "NV002",
                     "Nguyễn Văn Quản Lý",
                     "0900000002",
                     "TP.HCM",
@@ -75,16 +70,13 @@ public class database {
                     LocalDate.of(2025, 2, 1),
                     15000000D,
                     "manager01",
-                    "123456",
                     "manager@qlbh.com",
                     Set.of(Role.STORE_MANAGER)
             );
 
             seedEmployee(
-                    employeeRepository,
+                    employeeService,
                     userRepository,
-                    passwordEncoder,
-                    "NV003",
                     "Trần Thị Văn Phòng",
                     "0900000003",
                     "TP.HCM",
@@ -92,16 +84,14 @@ public class database {
                     LocalDate.of(2025, 3, 1),
                     10000000D,
                     "office01",
-                    "123456",
+
                     "office@qlbh.com",
                     Set.of(Role.OFFICE_STAFF)
             );
 
             seedEmployee(
-                    employeeRepository,
+                    employeeService,
                     userRepository,
-                    passwordEncoder,
-                    "NV004",
                     "Lê Văn Giao Hàng",
                     "0900000004",
                     "TP.HCM",
@@ -109,7 +99,6 @@ public class database {
                     LocalDate.of(2025, 4, 1),
                     12000000D,
                     "delivery01",
-                    "123456",
                     "delivery@qlbh.com",
                     Set.of(Role.OPERATOR_DELIVERY)
             );
@@ -232,10 +221,8 @@ public class database {
     }
 
     private void seedEmployee(
-            EmployeeRepository employeeRepository,
+            EmployeeService employeeService,
             UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
-            String code,
             String fullName,
             String phone,
             String address,
@@ -243,39 +230,27 @@ public class database {
             LocalDate hireDate,
             Double baseSalary,
             String username,
-            String rawPassword,
             String email,
             Set<Role> roles
-    ) {
-        if (employeeRepository.existsByCode(code) || userRepository.existsByUsername(username)) {
+    ) throws APIException {
+        if (userRepository.existsByUsername(username)) {
             return;
         }
 
-        User user = User.builder()
-                .username(username)
-                .password(passwordEncoder.encode(rawPassword))
-                .fullName(fullName)
-                .email(email)
-                .roles(roles)
-                .active(true)
-                .build();
-
-        User savedUser = userRepository.save(user);
-
-        Employee employee = Employee.builder()
-                .code(code)
+        EmployeeCreateReq req = EmployeeCreateReq.builder()
                 .fullName(fullName)
                 .phone(phone)
                 .address(address)
                 .position(position)
                 .hireDate(hireDate)
-                .status(EmployeeStatus.ACTIVE)
                 .baseSalary(baseSalary)
-                .user(savedUser)
+                .username(username)
+                .email(email)
+                .role(roles.iterator().next()) // nếu chỉ 1 role
                 .build();
 
-        employeeRepository.save(employee);
+        employeeService.createEmployee(req);
 
-        log.info("Seed employee success: {} - {}", code, fullName);
+        log.info("Seed employee success: {}", fullName);
     }
 }

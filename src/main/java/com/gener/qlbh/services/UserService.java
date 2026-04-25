@@ -3,6 +3,7 @@ package com.gener.qlbh.services;
 import com.gener.qlbh.dtos.response.AuthProfileRes;
 import com.gener.qlbh.dtos.response.UserProfileRes;
 import com.gener.qlbh.enums.ErrorCode;
+import com.gener.qlbh.enums.Role;
 import com.gener.qlbh.enums.SuccessCode;
 import com.gener.qlbh.exception.APIException;
 import com.gener.qlbh.models.ResponseObject;
@@ -12,8 +13,14 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -53,6 +60,25 @@ public class UserService {
 
 
         );
+    }
+
+    public Set<Role> getCurrentUserRoles() {
+        return Objects.requireNonNull(SecurityContextHolder.getContext()
+                        .getAuthentication())
+                .getAuthorities()
+                .stream()
+                .map(auth -> auth.getAuthority().replace("ROLE_", ""))
+                .map(Role::valueOf)
+                .collect(Collectors.toSet());
+    }
+
+    public boolean hasAnyRole(Set<Role> roles, Role... allowedRoles) {
+        return Arrays.stream(allowedRoles)
+                .anyMatch(roles::contains);
+    }
+
+    public boolean hasOnlyRole(Set<Role> roles, Role role) {
+        return roles.size() == 1 && roles.contains(role);
     }
 
 

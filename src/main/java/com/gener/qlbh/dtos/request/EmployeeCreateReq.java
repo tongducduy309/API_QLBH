@@ -10,7 +10,6 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class EmployeeCreateReq {
-    private String code;
     private String fullName;
     private String phone;
     private String address;

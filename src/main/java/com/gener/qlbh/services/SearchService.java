@@ -1,6 +1,7 @@
 package com.gener.qlbh.services;
 
 import com.gener.qlbh.dtos.response.SearchSuggestionRes;
+import com.gener.qlbh.enums.Role;
 import com.gener.qlbh.models.*;
 import com.gener.qlbh.models.Inventory;
 import com.gener.qlbh.repositories.*;
@@ -25,12 +26,22 @@ public class SearchService {
     private final InventoryRepository inventoryLotRepository;
     private final CustomerRepository customerRepository;
     private final PurchaseReceiptsRepository purchaseReceiptsRepository;
+    private final EmployeeRepository employeeRepository;
+    private final UserService userService;
 
     private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public List<SearchSuggestionRes> globalSearch(String keyword, int limit) {
         String q = normalize(keyword);
         if (q.isBlank()) return Collections.emptyList();
+
+        Set<Role> roles = userService.getCurrentUserRoles();
+
+        if (userService.hasOnlyRole(roles, Role.OPERATOR_DELIVERY)) {
+            return searchOrders(q).stream()
+                    .limit(limit)
+                    .toList();
+        }
 
         List<SearchSuggestionRes> orders = searchOrders(q);
         List<SearchSuggestionRes> products = searchProducts(q);
@@ -39,11 +50,31 @@ public class SearchService {
         List<SearchSuggestionRes> customers = searchCustomers(q);
         List<SearchSuggestionRes> receipts = searchReceipts(q);
 
-        return Stream.of(orders, products,variants,inventories, customers, receipts)
+        List<SearchSuggestionRes> employees = Collections.emptyList();
+
+        if (userService.hasAnyRole(roles,
+                Role.ADMIN,
+                Role.STORE_MANAGER,
+                Role.OFFICE_STAFF
+        )) {
+            employees = searchEmployees(q);
+        }
+
+        return Stream.of(
+                        orders,
+                        products,
+                        variants,
+                        inventories,
+                        customers,
+                        receipts,
+                        employees
+                )
                 .flatMap(Collection::stream)
                 .limit(limit)
                 .collect(Collectors.toList());
     }
+
+
 
     private List<SearchSuggestionRes> searchOrders(String q) {
         return orderRepository.findAll().stream()
@@ -148,6 +179,21 @@ public class SearchService {
                 .toList();
     }
 
+    private List<SearchSuggestionRes> searchEmployees(String q) {
+        return employeeRepository.findAll().stream()
+                .filter(e -> containsAny(q,
+                        e.getCode(),
+                        e.getFullName(),
+                        e.getPhone(),
+                        e.getAddress(),
+                        e.getPosition(),
+                        e.getUser() != null ? e.getUser().getUsername() : null,
+                        e.getUser() != null ? e.getUser().getEmail() : null
+                ))
+                .map(this::mapEmployee)
+                .toList();
+    }
+
     private SearchSuggestionRes mapOrder(Order o) {
         return SearchSuggestionRes.builder()
                 .entityId(String.valueOf(o.getId()))
@@ -218,6 +264,21 @@ public class SearchService {
                         r.getTotalQuantity() != null ? "SL: " + trimNumber(r.getTotalQuantity()) : null,
                         r.getCost() != null ? money(r.getCost()) : null,
                         r.getCreatedAt() != null ? r.getCreatedAt().format(DTF) : null))
+                .build();
+    }
+
+    private SearchSuggestionRes mapEmployee(Employee e) {
+        return SearchSuggestionRes.builder()
+                .entityId(String.valueOf(e.getId()))
+                .entityType("EMPLOYEE")
+                .entityLabel("Nhân viên")
+                .title(e.getFullName() + " (" + e.getCode() + ")")
+                .subtitle(join(" • ",
+                        e.getPhone(),
+                        e.getPosition()))
+                .meta(join(" • ",
+                        e.getAddress(),
+                        e.getUser() != null ? e.getUser().getUsername() : null))
                 .build();
     }
 
