@@ -25,6 +25,7 @@ public class EmployeeDetailRes {
     private Double baseSalary;
     private Boolean active;
     private LocalDateTime createdAt;
+    private LocalDate dateOfBirth;
 
     private User user;
 

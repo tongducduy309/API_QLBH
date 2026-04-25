@@ -16,6 +16,7 @@ public class EmployeeCreateReq {
     private String position;
     private LocalDate hireDate;
     private Double baseSalary;
+    private LocalDate dateOfBirth;
 
     private String username;
     private String email;

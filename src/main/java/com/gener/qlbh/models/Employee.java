@@ -37,6 +37,8 @@ public class Employee {
 
     private LocalDate hireDate;
 
+    private LocalDate dateOfBirth;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
